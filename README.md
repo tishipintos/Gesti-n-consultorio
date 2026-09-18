@@ -7,8 +7,9 @@ con la configuración completa actual, ejecutar `npm run dev`.
 
 Expo tiene una entrada explícita en `src/main.tsx` y está limitado a web. Esto
 evita que busque `App` desde `expo/AppEntry` con la estructura de pnpm. La vista
-web de Expo aún necesita instalar sus dependencias web y configurar el procesador
-PostCSS de Tailwind; no está lista hasta completar esos pasos. Expo Go nativo
+web de Expo se inicia con `npm start` (o `npx expo start --web --clear` para limpiar
+la caché). Metro procesa Tailwind mediante `postcss.config.mjs`; Vite conserva su
+plugin propio. Expo Go nativo
 requiere una adaptación adicional porque las pantallas usan elementos del DOM.
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.

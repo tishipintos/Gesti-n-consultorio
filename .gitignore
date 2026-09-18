@@ -9,7 +9,9 @@ lerna-debug.log*
 
 node_modules
 .expo/
+.pnpm-store/
 dist
+dist-expo/
 dist-ssr
 *.local
 
