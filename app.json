@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "Gestión Consultorio",
+    "slug": "gestion-consultorio",
+    "platforms": ["web"],
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

@@ -1,5 +1,16 @@
 # React + TypeScript + Vite
 
+## Vista previa y Expo
+
+La aplicación utiliza React DOM, React Router y Tailwind mediante Vite. Para verla
+con la configuración completa actual, ejecutar `npm run dev`.
+
+Expo tiene una entrada explícita en `src/main.tsx` y está limitado a web. Esto
+evita que busque `App` desde `expo/AppEntry` con la estructura de pnpm. La vista
+web de Expo aún necesita instalar sus dependencias web y configurar el procesador
+PostCSS de Tailwind; no está lista hasta completar esos pasos. Expo Go nativo
+requiere una adaptación adicional porque las pantallas usan elementos del DOM.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

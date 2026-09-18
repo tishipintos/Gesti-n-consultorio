@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "src/main.tsx",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -12,6 +13,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "date-fns": "^4.4.0",
+    "expo": "^57.0.23",
     "lucide-react": "^1.43.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
