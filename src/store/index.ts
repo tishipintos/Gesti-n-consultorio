@@ -2,23 +2,31 @@ import { isAvailableProcedure } from '../utils/procedures'
 import { create } from 'zustand'
 import type { Client, Appointment, ClientPhoto, ClinicData } from '../types'
 import { generateId } from '../utils'
+import { storage } from '../platform/storage'
 
 const STORAGE_KEY = 'clinic_data'
+export let storageLoadError: unknown = null
 
 const loadFromStorage = (): ClinicData => {
   try {
-    const data = localStorage.getItem(STORAGE_KEY)
+    const data = storage.getItem(STORAGE_KEY)
     if (data) {
-      return JSON.parse(data)
+      const parsed: ClinicData = JSON.parse(data)
+      if (!parsed || !Array.isArray(parsed.clients) || !Array.isArray(parsed.appointments) || !Array.isArray(parsed.photos)) {
+        throw new Error('Los datos guardados no tienen el formato esperado.')
+      }
+      return parsed
     }
   } catch (error) {
+    storageLoadError = error
     console.warn('Error loading data from localStorage:', error)
   }
   return { clients: [], appointments: [], photos: [] }
 }
 
 const saveToStorage = (state: ClinicData): void => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  if (storageLoadError) throw new Error('No se pudieron leer los datos existentes. Reiniciá la app antes de guardar cambios.')
+  storage.setItem(STORAGE_KEY, JSON.stringify(state))
 }
 
 interface StoreState {
@@ -152,8 +160,8 @@ export const useStore = create<StoreState>((set, get) => {
       get().photos.filter((p) => p.clientId === clientId),
 
     clearAllData: () => {
-      set({ clients: [], appointments: [], photos: [] })
       saveToStorage({ clients: [], appointments: [], photos: [] })
+      set({ clients: [], appointments: [], photos: [] })
     },
   }
 })

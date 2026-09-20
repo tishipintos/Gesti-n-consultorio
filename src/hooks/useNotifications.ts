@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store'
 import { getClientFullName, formatDate } from '../utils'
 import { addDays } from 'date-fns'
+import { onForeground } from '../platform/foreground'
 import type { Notification } from '../types'
 
 export function useNotifications() {
@@ -13,8 +14,8 @@ export function useNotifications() {
   useEffect(() => {
     const refresh = () => setNow(Date.now())
     const timer = setInterval(refresh, 60000)
-    window.addEventListener('focus', refresh)
-    return () => { clearInterval(timer); window.removeEventListener('focus', refresh) }
+    const unsubscribe = onForeground(refresh)
+    return () => { clearInterval(timer); unsubscribe() }
   }, [])
   const notifications = useMemo((): Notification[] => {
     const day = formatDate(new Date(now), 'yyyy-MM-dd')

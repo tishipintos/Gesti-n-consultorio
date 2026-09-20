@@ -1,7 +1,7 @@
 import { format, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, isSameDay, isSameMonth, differenceInDays, isAfter, isBefore, addWeeks } from 'date-fns'
 import { es } from 'date-fns/locale'
 
-export const generateId = (): string => crypto.randomUUID()
+export { generateId } from '../platform/id'
 
 export const formatDate = (date: string | Date, fmt: string = 'dd/MM/yyyy'): string => {
   const d = typeof date === 'string' ? parseISO(date) : date
@@ -143,4 +143,3 @@ export interface ProcedureCategory {
   label: string
   color: string
 }
-

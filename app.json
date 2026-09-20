@@ -2,7 +2,13 @@
   "expo": {
     "name": "Gestión Consultorio",
     "slug": "gestion-consultorio",
-    "platforms": ["web"],
+    "platforms": ["ios", "android", "web"],
+    "userInterfaceStyle": "light",
+    "plugins": [
+      ["expo-image-picker", { "photosPermission": "Elegir fotos para la ficha del paciente.", "cameraPermission": "Tomar fotos para registrar la evolución del paciente.", "microphonePermission": false }],
+      "expo-sqlite",
+      "@react-native-community/datetimepicker"
+    ],
     "web": {
       "bundler": "metro"
     }
