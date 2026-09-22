@@ -2,7 +2,7 @@
 
 ## Documentación de Obsidian
 
-El Vault existente es `Consultorio/` y forma parte del proyecto. Su entrada es `Consultorio/00 - Dashboard.md`. Obsidian y React trabajan sobre los mismos archivos: reutilizar este Vault, sin crear carpetas de documentación duplicadas.
+El Vault existente es `../Consultorio/`, carpeta hermana de este repositorio, y forma parte del proyecto. Su entrada es `../Consultorio/00 - Dashboard.md`. Las referencias `Consultorio/` de esta guía corresponden a ese Vault. Obsidian y React trabajan sobre los mismos archivos: reutilizar este Vault, sin crear carpetas de documentación duplicadas.
 
 ### Lectura del proyecto: Obsidian primero
 
@@ -28,7 +28,7 @@ El Vault existente es `Consultorio/` y forma parte del proyecto. Su entrada es `
 1. Revisar la documentación relevante en Obsidian antes de modificar el proyecto.
 2. Revisar el código afectado y respetar la estructura y el estilo actuales.
 3. Implementar el cambio solicitado.
-4. Ejecutar las verificaciones disponibles: `npm run lint` y `npm run build`. No hay un script de tests definido actualmente; informar cualquier verificación que no se pueda ejecutar.
+4. Ejecutar las verificaciones disponibles: `npm run lint` y `npm run build`. Para cambios de lógica o código nativo, usar también `npm test` y `npm run check:native` según corresponda; informar cualquier verificación que no se pueda ejecutar.
 5. Actualizar la documentación afectada según las reglas anteriores.
 6. Resumir qué archivos de código y documentación cambiaron y los resultados de las verificaciones.
 

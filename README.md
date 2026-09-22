@@ -82,10 +82,16 @@ Validación de la adaptación: los cinco tests pasaron; TypeScript nativo, build
 Vite y exportación de las tres plataformas completados. Lint pasa con advertencias
 preexistentes. En Expo Go sobre emulador Android se verificaron arranque, alta de
 paciente, creación de turno, registro de pago y persistencia al cerrar/reabrir.
+En la revisión de los formularios se comprobó: teclado sin la barra inferior,
+cancelar nacimiento sin asignar una fecha, alta de paciente desde Agendar,
+formulario de turno con ese paciente y regreso al domingo 27/09/2026 después
+de guardar. Los domingos se muestran alineados en la séptima columna.
 La cámara/galería y la ejecución en iPhone físico requieren validación en dispositivo.
 
-El Vault `Consultorio/` mencionado en AGENTS.md no está presente en este checkout.
-La arquitectura de esta adaptación se documenta aquí, sin crear otro Vault.
+El Vault existente está en `../Consultorio/`, como carpeta hermana de este
+repositorio. Su entrada es `00 - Dashboard.md`; `07 - React Native y Expo Go.md`
+documenta la adaptación completa, las correcciones, las verificaciones y los
+pendientes. Se reutiliza ese Vault, sin crear una copia dentro del checkout.
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
