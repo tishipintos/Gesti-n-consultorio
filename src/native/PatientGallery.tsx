@@ -11,7 +11,7 @@ import { Button } from './ui'
 import { confirmDelete } from './actions'
 import type { PhotoType } from '../types'
 
-export function PatientGallery({ clientId, onAdd, onCompare }: { clientId: string; onAdd: () => void; onCompare: () => void }) {
+export function PatientGallery({ clientId, onAdd }: { clientId: string; onAdd: () => void }) {
   const photos = useStore(s => s.photos).filter(p => p.clientId === clientId)
   const remove = useStore(s => s.deletePhoto)
   const [type, setType] = useState<PhotoType>('before')
@@ -27,7 +27,6 @@ export function PatientGallery({ clientId, onAdd, onCompare }: { clientId: strin
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Text style={[styles.muted, { fontSize: 12 }]}>{formatDate(photo.takenAt)}</Text><View style={{ marginRight: -11 }}><IconButton icon={Trash2} color={colors.muted} label="Eliminar foto" onPress={() => confirmDelete('Se eliminará esta foto de la ficha.', () => { remove(photo.id); removePhotoFile(photo.fileUrl) })} /></View></View>
       {!!photo.procedure && <Text style={styles.muted}>{photo.procedure}</Text>}
     </View>)}</View> : <View style={{ alignItems: 'center', paddingVertical: 24, gap: 12 }}><Camera size={32} color={colors.primary} /><Text style={{ fontFamily: fonts.semibold, color: colors.text, fontSize: 16, textAlign: 'center' }}>Todavía no hay fotos de {PHOTO_TYPE_LABELS[type].toLowerCase()}</Text><Text style={[styles.muted, { textAlign: 'center' }]}>Agregá fotos para registrar la evolución del tratamiento.</Text><Button title="Agregar foto" onPress={onAdd} /></View>}
-    {photos.length > 0 && <Button secondary title="Comparar fotos" onPress={onCompare} />}
     <Modal visible={!!viewing} animationType="fade" onRequestClose={() => setViewingId(null)}>
       <SafeAreaView style={[styles.page, { backgroundColor: '#16140F' }]}>
         <View style={{ flexDirection: 'row', padding: 16, justifyContent: 'space-between', alignItems: 'center' }}><Text style={[styles.text, { color: 'white', flex: 1 }]}>{viewing && `${PHOTO_TYPE_LABELS[viewing.type]} · ${formatDate(viewing.takenAt)}`}</Text><IconButton icon={X} label="Cerrar foto" color="white" onPress={() => setViewingId(null)} /></View>

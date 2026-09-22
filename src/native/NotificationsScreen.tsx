@@ -31,7 +31,7 @@ export function NotificationsScreen() {
     renderItem={({ item }) => {
       const payment = item.type === 'paymentDue'
       return <Pressable accessibilityRole="button" accessibilityLabel={item.clientName + ': ' + item.title} onPress={() => navigation.navigate('Client', { id: item.clientId })} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 12, borderRadius: 14, backgroundColor: payment ? '#FFF1F2' : '#EDF5FF', opacity: pressed ? 0.7 : 1 })}>
-        <View style={{ width: 32, height: 32, marginTop: 2, backgroundColor: payment ? '#FFE4E6' : '#D9E9FF', borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}>{payment ? <DollarSign size={16} color="#BE123C" /> : <Bell size={16} color="#245DA8" />}</View>
+        {payment && <View style={{ width: 32, height: 32, marginTop: 2, backgroundColor: '#FFE4E6', borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}><DollarSign size={16} color="#BE123C" /></View>}
         <View style={{ flex: 1, gap: 4 }}><Text style={{ fontFamily: fonts.semibold, fontSize: 14, lineHeight: 20, color: payment ? '#9F1239' : '#193D70' }}>{item.clientName}</Text><Text style={{ fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, color: payment ? '#9F1239' : '#193D70' }}>{item.title}</Text><Text style={{ fontFamily: fonts.regular, fontSize: 12, lineHeight: 18, color: payment ? '#9D374D' : '#456184' }}>{item.subtitle}</Text></View>
       </Pressable>
     }} />

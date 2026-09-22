@@ -9,7 +9,7 @@ import type { MainTabs, RootStack } from './navigation'
 import { PatientFormScreen, PatientScreen, PatientsScreen } from './PatientScreens'
 import { ScheduleScreen, AppointmentFormScreen } from './ScheduleScreens'
 import { SelectPatientScreen } from './SelectPatientScreen'
-import { PhotoFormScreen, PhotosScreen } from './PhotoScreens'
+import { PhotoFormScreen } from './PhotoScreens'
 import { NotificationsScreen } from './NotificationsScreen'
 import { Button } from './ui'
 import { colors, fonts, styles } from './theme'
@@ -48,7 +48,6 @@ export default function NativeApp() {
       <Stack.Screen name="SelectPatient" component={SelectPatientScreen} options={{ headerShown: false, presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }} />
       <Stack.Screen name="AppointmentForm" component={AppointmentFormScreen} options={{ title: 'Turno' }} />
       <Stack.Screen name="PhotoForm" component={PhotoFormScreen} options={{ title: 'Nueva foto' }} />
-      <Stack.Screen name="Photos" component={PhotosScreen} options={{ title: 'Evolución' }} />
     </Stack.Navigator>
     <WelcomeOverlay />
   </NavigationContainer>}</ErrorBoundary></SafeAreaProvider>

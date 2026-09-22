@@ -8,6 +8,5 @@ export type RootStack = {
   SelectPatient: { date: string; clientId?: string }
   AppointmentForm: { clientId?: string; appointmentId?: string; date?: string; fromAgenda?: boolean } | undefined
   PhotoForm: { clientId: string }
-  Photos: { clientId: string }
 }
 export type ScreenProps<T extends keyof RootStack> = NativeStackScreenProps<RootStack, T>

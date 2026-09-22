@@ -62,7 +62,7 @@ export function PatientScreen({ route, navigation }: ScreenProps<'Client'>) {
     </View>
     {!appointments.length && <Empty title="Sin turnos" detail="Agendá la primera consulta de este paciente." />}
     {(allAppointments ? appointments : appointments.slice(0, 2)).map(appointment => <AppointmentCard key={appointment.id} appointment={appointment} onEdit={() => navigation.navigate('AppointmentForm', { appointmentId: appointment.id })} />)}
-    <PatientGallery clientId={client.id} onAdd={() => navigation.navigate('PhotoForm', { clientId: client.id })} onCompare={() => navigation.navigate('Photos', { clientId: client.id })} />
+    <PatientGallery clientId={client.id} onAdd={() => navigation.navigate('PhotoForm', { clientId: client.id })} />
   </Page>
 }
 export function PatientFormScreen({ route, navigation }: ScreenProps<'ClientForm'>) {

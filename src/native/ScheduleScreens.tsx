@@ -132,7 +132,7 @@ export function AppointmentFormScreen({ route, navigation }: ScreenProps<'Appoin
     </View>
     <View style={[styles.card, { gap: 16 }]}>
       <View style={{ gap: 6 }}>
-        <SelectField label="Motivo de consulta" value={procedure} onChange={value => { setProcedure(value); setErrors({}) }} placeholder="Elegir motivo de consulta" options={PROCEDURES.map(p => ({ label: p, value: p }))} />
+        <SelectField label="Motivo de consulta" maxOptionsHeight={216} value={procedure} onChange={value => { setProcedure(value); setErrors({}) }} placeholder="Elegir motivo de consulta" options={PROCEDURES.map(p => ({ label: p, value: p }))} />
         {errors.procedure && <Text accessibilityRole="alert" style={{ color: colors.danger, fontSize: 12 }}>{errors.procedure}</Text>}
       </View>
       <Field label="Notas" value={notes} onChangeText={setNotes} placeholder="Notas adicionales..." multiline />

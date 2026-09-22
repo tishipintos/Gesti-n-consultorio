@@ -5,13 +5,12 @@ import { Directory, File, Paths } from 'expo-file-system'
 import { Image as ImageIcon } from 'lucide-react-native'
 import { useStore } from '../store'
 import type { PhotoType } from '../types'
-import { formatDate, generateId, getClientFullName, PHOTO_TYPE_LABELS } from '../utils'
+import { generateId, getClientFullName, PHOTO_TYPE_LABELS } from '../utils'
 import type { ScreenProps } from './navigation'
-import { Button, Choices, Empty, Field, Page } from './ui'
+import { Button, Empty, Field, Page } from './ui'
 import { colors, styles } from './theme'
 import { Avatar } from './chrome'
-import { photoUri, PHOTO_DIRECTORY } from './photoFiles'
-import { confirmDelete } from './actions'
+import { PHOTO_DIRECTORY } from './photoFiles'
 
 export function PhotoFormScreen({ route, navigation }: ScreenProps<'PhotoForm'>) {
   const clientId = route.params.clientId
@@ -61,20 +60,5 @@ export function PhotoFormScreen({ route, navigation }: ScreenProps<'PhotoForm'>)
     <Field label="Procedimiento" value={procedure} onChangeText={setProcedure} /><Field label="Notas" value={notes} onChangeText={setNotes} multiline />
     </View>
     <Button title={busy ? 'Procesando…' : 'Guardar foto'} onPress={save} disabled={busy || !uri} />
-  </Page>
-}
-export function PhotosScreen({ route, navigation }: ScreenProps<'Photos'>) {
-  const clientId = route.params.clientId
-  const photos = useStore(s => s.photos).filter(p => p.clientId === clientId)
-  const remove = useStore(s => s.deletePhoto)
-  const [selected, setSelected] = useState<string[]>([])
-  const [filter, setFilter] = useState('all')
-  const comparisons = selected.map(id => photos.find(p => p.id === id)).filter(p => !!p)
-  return <Page><Button title="Agregar foto" onPress={() => navigation.navigate('PhotoForm', { clientId })} />
-    <Choices label="Mostrar" value={filter} onChange={setFilter} options={[{ value: 'all', label: 'Todas' }, ...Object.entries(PHOTO_TYPE_LABELS).map(([value, label]) => ({ value, label }))]} />
-    {comparisons.length === 2 && <View style={styles.card}><Text style={styles.heading}>Comparación</Text><View style={{ flexDirection: 'row', gap: 8 }}>{comparisons.map(p => <View key={p.id} style={{ flex: 1, gap: 6 }}><Text style={styles.text}>{PHOTO_TYPE_LABELS[p.type]}</Text><Image source={{ uri: photoUri(p.fileUrl) }} accessibilityLabel={`${PHOTO_TYPE_LABELS[p.type]}: ${p.procedure || 'Foto clínica'}`} style={styles.photo} resizeMode="contain" /><Text style={styles.muted}>{formatDate(p.takenAt)}</Text></View>)}</View><Button secondary title="Limpiar comparación" onPress={() => setSelected([])} /></View>}
-    {!!photos.length && <Text style={styles.muted}>Seleccioná dos fotos para compararlas.</Text>}
-    {!photos.length && <Empty title="Sin fotos todavía" detail="Registrá el antes, después y la evolución del tratamiento." />}
-    {photos.filter(p => filter === 'all' || p.type === filter).map(p => <View key={p.id} style={styles.card}><Text style={styles.heading}>{PHOTO_TYPE_LABELS[p.type]} · {p.procedure || 'Foto clínica'}</Text><Image source={{ uri: photoUri(p.fileUrl) }} accessibilityLabel={p.notes || PHOTO_TYPE_LABELS[p.type]} style={styles.photo} resizeMode="contain" /><Text style={styles.muted}>{formatDate(p.takenAt)}</Text>{!!p.notes && <Text style={styles.text}>{p.notes}</Text>}<Button secondary title={selected.includes(p.id) ? 'Quitar de comparación' : 'Seleccionar para comparar'} onPress={() => setSelected(current => current.includes(p.id) ? current.filter(id => id !== p.id) : [...current.slice(-1), p.id])} /><Button danger title="Eliminar foto" onPress={() => confirmDelete('Se eliminará la foto de esta ficha.', () => { remove(p.id); setSelected(current => current.filter(id => id !== p.id)); if (p.fileUrl.startsWith(`${PHOTO_DIRECTORY}/`)) { try { new File(photoUri(p.fileUrl)).delete() } catch { /* The record is removed; an orphan file can be cleaned later. */ } } })} /></View>)}
   </Page>
 }
