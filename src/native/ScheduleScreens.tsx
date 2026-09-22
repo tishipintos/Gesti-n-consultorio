@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { FlatList, Pressable, Switch, Text, View } from 'react-native'
+import { Alert, FlatList, Pressable, Text, View } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import type { RouteProp } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -9,19 +9,20 @@ import { MonthCalendar } from './MonthCalendar'
 import { AppointmentDatePicker } from './AppointmentDatePicker'
 import { Avatar, FAB, IconButton } from './chrome'
 import { onForeground } from '../platform/foreground'
-import type { Appointment, AppointmentStatus } from '../types'
+import type { Appointment } from '../types'
 import { useStore } from '../store'
 import { formatDate, getClientFullName, getTimeSlots, STATUS_LABELS } from '../utils'
 import { PROCEDURES } from '../utils/procedures'
 import type { MainTabs, RootStack, ScreenProps } from './navigation'
-import { Button, Choices, Empty, Field, Page, SelectField } from './ui'
+import { Button, Empty, Field, Page, SelectField } from './ui'
 import { colors, fonts, styles } from './theme'
 import { attempt, confirmDelete } from './actions'
 
 export function AppointmentCard({ appointment, onEdit, onClient }: { appointment: Appointment; onEdit: () => void; onClient?: () => void }) {
+  const update = useStore(s => s.updateAppointment)
+  const confirmPayment = () => Alert.alert(appointment.paid ? 'Cambiar pago' : 'Confirmar pago', appointment.paid ? '¿Marcar esta consulta como pendiente de pago?' : '¿La persona pagó esta consulta?', [{ text: 'Cancelar', style: 'cancel' }, { text: 'Confirmar', onPress: () => attempt(() => update(appointment.id, { paid: !appointment.paid })) }])
   return <Pressable accessibilityRole="button" accessibilityLabel={'Editar turno del ' + formatDate(appointment.date)} onPress={onEdit} style={styles.card}>
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><View style={{ flex: 1, gap: 4 }}><Text style={styles.heading}>{formatDate(appointment.date, 'dd MMM yyyy')}</Text><Text style={styles.muted}>{appointment.time} · {appointment.procedure || 'Consulta'}</Text></View><DollarSign size={22} color={appointment.paid ? '#15803D' : colors.muted} /></View>
-    <View style={styles.row}><Text style={{ fontFamily: fonts.semibold, fontSize: 12, color: 'white', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: appointment.status === 'completed' ? colors.success : appointment.status === 'scheduled' ? colors.primary : colors.muted }}>{STATUS_LABELS[appointment.status]}</Text><Text style={styles.muted}>{appointment.paid ? 'Pagado' : 'Sin pagar'}</Text></View>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><View style={{ flex: 1, gap: 4 }}><Text style={styles.heading}>{formatDate(appointment.date, 'dd MMM yyyy')}</Text><Text style={styles.muted}>{appointment.time} · {appointment.procedure || 'Consulta'}</Text></View><Pressable accessibilityRole="button" accessibilityLabel={appointment.paid ? 'Pagado. Cambiar a pendiente' : 'Confirmar pago'} onPress={event => { event.stopPropagation(); confirmPayment() }} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><DollarSign size={22} color={appointment.paid ? '#15803D' : colors.muted} /></Pressable></View>
     {!!appointment.notes && <Text style={styles.text}>{appointment.notes}</Text>}{onClient && <Button secondary title="Ver paciente" onPress={onClient} />}
   </Pressable>
 }
@@ -67,14 +68,14 @@ export function ScheduleScreen() {
 export function AppointmentFormScreen({ route, navigation }: ScreenProps<'AppointmentForm'>) {
   const store = useStore()
   const existing = store.appointments.find(a => a.id === route.params?.appointmentId)
-  useLayoutEffect(() => { navigation.setOptions({ title: existing ? 'Editar turno' : 'Nuevo turno' }) }, [existing, navigation])
+  useLayoutEffect(() => { navigation.setOptions({ title: existing ? 'Editar turno' : route.params?.fromAgenda ? 'Agendar turno' : 'Nuevo turno' }) }, [existing, navigation, route.params?.fromAgenda])
   const clientId = existing?.clientId || route.params?.clientId || ''
   const [date, setDate] = useState(() => new Date(`${existing?.date || route.params?.date || formatDate(new Date(), 'yyyy-MM-dd')}T12:00:00`))
   const [time, setTime] = useState(existing?.time || '09:00')
   const [procedure, setProcedure] = useState(existing?.procedure || '')
   const [notes, setNotes] = useState(existing?.notes || '')
-  const [status, setStatus] = useState<AppointmentStatus>(existing?.status || 'scheduled')
-  const [paid, setPaid] = useState(existing?.paid || false)
+  const status = existing?.status || 'scheduled'
+  const paid = existing?.paid || false
   const [errors, setErrors] = useState<{ time?: string; procedure?: string }>({})
   const [saving, setSaving] = useState(false)
   const savingRef = useRef(false)
@@ -124,7 +125,7 @@ export function AppointmentFormScreen({ route, navigation }: ScreenProps<'Appoin
         <AppointmentDatePicker selected={date} appointmentDates={appointmentDates} onSelect={value => { setDate(value); setErrors({}) }} />
       </View>
       <View style={{ gap: 6 }}>
-        <SelectField label="Hora" value={time} onChange={value => { setTime(value); setErrors({}) }} placeholder="Elegir hora" options={slots.map(slot => ({ value: slot, label: slot + (occupied.has(slot) ? ' · Ocupado' : ''), disabled: status !== 'cancelled' && occupied.has(slot) }))} />
+        <SelectField label="Hora" maxOptionsHeight={216} value={time} onChange={value => { setTime(value); setErrors({}) }} placeholder="Elegir hora" options={slots.map(slot => ({ value: slot, label: slot + (occupied.has(slot) ? ' · Ocupado' : ''), disabled: status !== 'cancelled' && occupied.has(slot) }))} />
         {errors.time && <Text accessibilityRole="alert" style={{ color: colors.danger, fontSize: 12 }}>{errors.time}</Text>}
         {slots.every(slot => occupied.has(slot)) && <Text accessibilityRole="alert" style={{ color: colors.danger, fontSize: 12 }}>No quedan horarios libres. Elegí otra fecha.</Text>}
       </View>
@@ -136,10 +137,6 @@ export function AppointmentFormScreen({ route, navigation }: ScreenProps<'Appoin
       </View>
       <Field label="Notas" value={notes} onChangeText={setNotes} placeholder="Notas adicionales..." multiline />
     </View>
-    {existing && <View style={styles.card}>
-      <Choices label="Estado" value={status} onChange={setStatus} options={(Object.keys(STATUS_LABELS) as AppointmentStatus[]).map(value => ({ value, label: STATUS_LABELS[value] }))} />
-      <View style={styles.row}><Text style={styles.text}>Pago registrado</Text><Switch accessibilityLabel="Pago registrado" value={paid} onValueChange={setPaid} trackColor={{ true: colors.primary }} /></View>
-    </View>}
     <Button title={saving ? (existing ? 'Guardando...' : 'Agendando...') : existing ? 'Guardar cambios' : 'Agendar turno'} onPress={save} disabled={saving || !time} />
     {existing && <Button danger title="Eliminar turno" onPress={() => confirmDelete('Se eliminará este turno de la agenda.', () => { store.deleteAppointment(existing.id); finish() })} />}
   </Page>

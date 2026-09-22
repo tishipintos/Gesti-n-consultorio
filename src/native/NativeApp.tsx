@@ -29,7 +29,7 @@ function Tabs() {
   return <Tab.Navigator tabBar={({ state, navigation }) => <BottomNav active={state.routes[state.index].name} onSelect={name => navigation.navigate(name)} />} screenOptions={{ header: ({ options }) => <AppHeader title={options.title || ''} subtitle={options.title === 'Pacientes' ? count + ' total' : undefined} right={options.title === 'Agenda' && todayCount > 0 ? <Text style={{ backgroundColor: colors.primary, color: 'white', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4, fontSize: 12, fontFamily: fonts.bold }}>{todayCount}</Text> : undefined} /> }}>
     <Tab.Screen name="Agenda" component={ScheduleScreen} options={{ title: 'Agenda' }} />
     <Tab.Screen name="Pacientes" component={PatientsScreen} options={{ title: 'Pacientes' }} />
-    <Tab.Screen name="Recordatorios" component={NotificationsScreen} options={{ title: 'Notificaciones' }} />
+    <Tab.Screen name="Recordatorios" component={NotificationsScreen} options={{ title: 'Notificaciones', headerShown: false }} />
   </Tab.Navigator>
 }
 class ErrorBoundary extends Component<PropsWithChildren, { failed: boolean }> {
@@ -45,7 +45,7 @@ export default function NativeApp() {
       <Stack.Screen name="Home" component={Tabs} options={{ headerShown: false }} />
       <Stack.Screen name="Client" component={PatientScreen} options={{ title: 'Ficha del paciente' }} />
       <Stack.Screen name="ClientForm" component={PatientFormScreen} options={{ title: 'Paciente' }} />
-      <Stack.Screen name="SelectPatient" component={SelectPatientScreen} options={{ title: 'Agendar turno' }} />
+      <Stack.Screen name="SelectPatient" component={SelectPatientScreen} options={{ headerShown: false, presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }} />
       <Stack.Screen name="AppointmentForm" component={AppointmentFormScreen} options={{ title: 'Turno' }} />
       <Stack.Screen name="PhotoForm" component={PhotoFormScreen} options={{ title: 'Nueva foto' }} />
       <Stack.Screen name="Photos" component={PhotosScreen} options={{ title: 'Evolución' }} />

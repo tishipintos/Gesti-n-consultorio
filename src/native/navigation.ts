@@ -5,7 +5,7 @@ export type RootStack = {
   Home: NavigatorScreenParams<MainTabs> | undefined
   Client: { id: string }
   ClientForm: { id?: string; appointmentDate?: string } | undefined
-  SelectPatient: { date: string }
+  SelectPatient: { date: string; clientId?: string }
   AppointmentForm: { clientId?: string; appointmentId?: string; date?: string; fromAgenda?: boolean } | undefined
   PhotoForm: { clientId: string }
   Photos: { clientId: string }

@@ -68,3 +68,16 @@ test('follow-up and payment reminders keep their existing timing rules', () => {
   appointments[0].paid = true
   assert.equal(getPaymentNotifications(appointments, clients, new Date('2026-09-09T12:00:00').getTime()).length, 0)
 })
+
+ test('payment confirmation changes only payment and survives reload', () => {
+  const store = reload().useStore
+  const client = store.getState().addClient({ firstName: 'Ana', lastName: 'Prueba' })
+  const appointment = store.getState().addAppointment({ clientId: client.id, date: '2026-09-20', time: '10:00', procedure: 'Botox', status: 'scheduled' })
+  for (const paid of [true, false]) {
+    store.getState().updateAppointment(appointment.id, { paid })
+    const restored = reload().useStore.getState().appointments[0]
+    assert.equal(restored.paid, paid)
+    assert.equal(restored.status, 'scheduled')
+    assert.equal(restored.time, '10:00')
+  }
+})

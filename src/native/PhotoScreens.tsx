@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Alert, Image, Text, View } from 'react-native'
+import { ActionSheetIOS, Alert, Image, Platform, Pressable, Text, View } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import { Directory, File, Paths } from 'expo-file-system'
-import { Camera, Image as ImageIcon } from 'lucide-react-native'
+import { Image as ImageIcon } from 'lucide-react-native'
 import { useStore } from '../store'
 import type { PhotoType } from '../types'
 import { formatDate, generateId, getClientFullName, PHOTO_TYPE_LABELS } from '../utils'
@@ -30,6 +30,10 @@ export function PhotoFormScreen({ route, navigation }: ScreenProps<'PhotoForm'>)
     } catch { Alert.alert('No se pudo abrir la foto', 'Intentá nuevamente con la cámara o la galería.') }
     finally { setBusy(false) }
   }
+  const chooseSource = () => {
+    if (Platform.OS === 'ios') ActionSheetIOS.showActionSheetWithOptions({ options: ['Cancelar', 'Tomar foto', 'Elegir de galería'], cancelButtonIndex: 0 }, index => { if (index === 1 || index === 2) void pick(index === 1) })
+    else Alert.alert('Seleccionar imagen', undefined, [{ text: 'Cancelar', style: 'cancel' }, { text: 'Tomar foto', onPress: () => { void pick(true) } }, { text: 'Elegir de galería', onPress: () => { void pick(false) } }])
+  }
   const save = () => {
     if (!uri) { Alert.alert('Falta la foto', 'Tomá una foto o elegí una de la galería.'); return }
     setBusy(true)
@@ -51,10 +55,9 @@ export function PhotoFormScreen({ route, navigation }: ScreenProps<'PhotoForm'>)
   const client = store.clients.find(c => c.id === clientId)
   if (!client) return <Page><Empty title="Paciente no encontrado" detail="Volvé a la lista de pacientes." /></Page>
   return <Page><View style={[styles.card, styles.row]}><Avatar {...client} /><View style={{ flex: 1 }}><Text style={styles.heading}>{getClientFullName(client)}</Text><Text style={styles.muted}>Paciente</Text></View></View>
+    <View style={{ flexDirection: 'row', gap: 12 }}>{(['before', 'after'] as const).map(value => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ checked: type === value }} onPress={() => setType(value)} style={[styles.button, { flex: 1, backgroundColor: type === value ? colors.primary : colors.tint }]}><Text style={[styles.buttonText, type !== value && { color: colors.text }]}>{PHOTO_TYPE_LABELS[value]}</Text></Pressable>)}</View>
     <View style={styles.card}>
-    <Choices label="Etapa" value={type} onChange={setType} options={(Object.keys(PHOTO_TYPE_LABELS) as PhotoType[]).map(value => ({ value, label: PHOTO_TYPE_LABELS[value] }))} />
-    {uri ? <Image source={{ uri }} accessibilityLabel="Vista previa de la foto" style={styles.photo} resizeMode="contain" /> : <View style={{ borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, borderRadius: 16, padding: 32, alignItems: 'center', gap: 12 }}><ImageIcon size={40} color={colors.primary} /><Text style={[styles.muted, { textAlign: 'center' }]}>Seleccioná una imagen para registrar la evolución</Text></View>}
-    <View style={styles.row}><Camera size={22} color={colors.primary} /><Button title="Tomar foto" onPress={() => { void pick(true) }} disabled={busy} /><Button secondary title="Elegir de galería" onPress={() => { void pick(false) }} disabled={busy} /></View>
+    <Pressable accessibilityRole="button" accessibilityLabel={uri ? 'Cambiar imagen' : 'Seleccionar imagen para registrar la evolución'} accessibilityState={{ disabled: busy }} disabled={busy} onPress={chooseSource}>{uri ? <Image source={{ uri }} accessibilityLabel="Vista previa de la foto" style={styles.photo} resizeMode="contain" /> : <View style={{ borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, borderRadius: 16, padding: 32, alignItems: 'center', gap: 12 }}><ImageIcon size={40} color={colors.primary} /><Text style={[styles.muted, { textAlign: 'center' }]}>Seleccioná una imagen para registrar la evolución</Text></View>}</Pressable>
     <Field label="Procedimiento" value={procedure} onChangeText={setProcedure} /><Field label="Notas" value={notes} onChangeText={setNotes} multiline />
     </View>
     <Button title={busy ? 'Procesando…' : 'Guardar foto'} onPress={save} disabled={busy || !uri} />

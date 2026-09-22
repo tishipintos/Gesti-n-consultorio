@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState } from 'react'
 import { Alert, Linking, Pressable, SectionList, Text, TextInput, View } from 'react-native'
-import { Calendar, Camera, Edit, Mail, Phone, Search, Users } from 'lucide-react-native'
+import { Calendar, Camera, ChevronDown, ChevronUp, Edit, Mail, Phone, Search, Users } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useStore } from '../store'
@@ -49,17 +49,19 @@ export function PatientScreen({ route, navigation }: ScreenProps<'Client'>) {
     <View style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: 16 }]}><Avatar {...client} size={64} /><View style={{ flex: 1, gap: 5 }}><Text style={[styles.heading, { fontSize: 22 }]}>{getClientFullName(client)}</Text>
     {client.phone && <Pressable accessibilityRole="link" accessibilityLabel={'Llamar a ' + client.phone} onPress={() => { void Linking.openURL(`tel:${client.phone!.replace(/[^+\d]/g, '')}`).catch(() => Alert.alert('No se pudo abrir el teléfono')) }} style={styles.row}><Phone size={16} color={colors.muted} /><Text style={styles.muted}>{client.phone}</Text></Pressable>}
     {client.email && <Pressable accessibilityRole="link" accessibilityLabel={'Enviar correo a ' + client.email} onPress={() => { void Linking.openURL(`mailto:${encodeURIComponent(client.email!)}`).catch(() => Alert.alert('No se pudo abrir el correo')) }} style={styles.row}><Mail size={16} color={colors.muted} /><Text style={[styles.muted, { flex: 1 }]}>{client.email}</Text></Pressable>}
-    </View></View>
     {client.dateOfBirth && <Text style={styles.muted}>Nacimiento: {formatDate(client.dateOfBirth)}</Text>}
+    </View></View>
     {!!client.notes && <View style={styles.card}><Text style={styles.label}>Historia Clínica</Text><Text style={styles.text}>{client.notes}</Text></View>}
     <View style={{ flexDirection: 'row', gap: 12 }}>
       <Pressable accessibilityRole="button" onPress={() => navigation.navigate('PhotoForm', { clientId: client.id })} style={[styles.card, { flex: 1, minHeight: 128, alignItems: 'center', justifyContent: 'center' }]}><Camera size={28} color={colors.primary} /><Text style={{ fontFamily: fonts.bold, fontSize: 16, color: colors.text }}>Fotos</Text></Pressable>
       <Pressable accessibilityRole="button" onPress={() => navigation.navigate('AppointmentForm', { clientId: client.id })} style={[styles.card, { flex: 1, minHeight: 128, alignItems: 'center', justifyContent: 'center' }]}><Calendar size={28} color={colors.primary} /><Text style={{ fontFamily: fonts.bold, fontSize: 16, color: colors.text }}>Cita</Text></Pressable>
     </View>
-    <Text style={styles.heading}>Historial de turnos</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+      <Text style={[styles.heading, { flex: 1 }]}>Historial de turnos</Text>
+      {appointments.length > 2 && <Pressable accessibilityRole="button" accessibilityState={{ expanded: allAppointments }} onPress={() => setAllAppointments(!allAppointments)} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4, minHeight: 44, opacity: pressed ? 0.6 : 1 })}><Text style={{ fontFamily: fonts.semibold, fontSize: 12, color: colors.primary }}>Todos los turnos</Text>{allAppointments ? <ChevronUp size={16} color={colors.primary} /> : <ChevronDown size={16} color={colors.primary} />}</Pressable>}
+    </View>
     {!appointments.length && <Empty title="Sin turnos" detail="Agendá la primera consulta de este paciente." />}
     {(allAppointments ? appointments : appointments.slice(0, 2)).map(appointment => <AppointmentCard key={appointment.id} appointment={appointment} onEdit={() => navigation.navigate('AppointmentForm', { appointmentId: appointment.id })} />)}
-    {appointments.length > 2 && <Button secondary title={allAppointments ? 'Ver menos' : 'Ver todos los turnos'} onPress={() => setAllAppointments(!allAppointments)} />}
     <PatientGallery clientId={client.id} onAdd={() => navigation.navigate('PhotoForm', { clientId: client.id })} onCompare={() => navigation.navigate('Photos', { clientId: client.id })} />
   </Page>
 }
@@ -93,7 +95,7 @@ export function PatientFormScreen({ route, navigation }: ScreenProps<'ClientForm
       if (id) { store.updateClient(id, data); navigation.goBack() }
       else {
         const client = store.addClient(data)
-        if (route.params?.appointmentDate) navigation.replace('AppointmentForm', { clientId: client.id, date: route.params.appointmentDate, fromAgenda: true })
+        if (route.params?.appointmentDate) navigation.replace('SelectPatient', { clientId: client.id, date: route.params.appointmentDate })
         else navigation.replace('Client', { id: client.id })
       }
     })
