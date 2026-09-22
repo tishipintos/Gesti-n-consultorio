@@ -2,17 +2,17 @@ import { useState } from 'react'
 import { Alert, Image, Text, View } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import { Directory, File, Paths } from 'expo-file-system'
+import { Camera, Image as ImageIcon } from 'lucide-react-native'
 import { useStore } from '../store'
 import type { PhotoType } from '../types'
-import { formatDate, generateId, PHOTO_TYPE_LABELS } from '../utils'
+import { formatDate, generateId, getClientFullName, PHOTO_TYPE_LABELS } from '../utils'
 import type { ScreenProps } from './navigation'
 import { Button, Choices, Empty, Field, Page } from './ui'
-import { styles } from './theme'
+import { colors, styles } from './theme'
+import { Avatar } from './chrome'
+import { photoUri, PHOTO_DIRECTORY } from './photoFiles'
 import { confirmDelete } from './actions'
 
-const PHOTO_DIRECTORY = 'clinic-photos'
-// Store relative file names: the iOS sandbox prefix can change after an update.
-function photoUri(value: string) { return value.startsWith(`${PHOTO_DIRECTORY}/`) ? new File(Paths.document, value).uri : value }
 export function PhotoFormScreen({ route, navigation }: ScreenProps<'PhotoForm'>) {
   const clientId = route.params.clientId
   const store = useStore()
@@ -48,11 +48,15 @@ export function PhotoFormScreen({ route, navigation }: ScreenProps<'PhotoForm'>)
       Alert.alert('No se pudo guardar', 'Verificá el espacio disponible e intentá nuevamente.')
     } finally { setBusy(false) }
   }
-  if (!store.clients.some(c => c.id === clientId)) return <Page><Empty title="Paciente no encontrado" detail="Volvé a la lista de pacientes." /></Page>
-  return <Page><Text style={styles.title}>Nueva foto</Text><View style={styles.row}><Button title="Tomar foto" onPress={() => { void pick(true) }} disabled={busy} /><Button secondary title="Elegir de galería" onPress={() => { void pick(false) }} disabled={busy} /></View>
-    {!!uri && <Image source={{ uri }} accessibilityLabel="Vista previa de la foto" style={styles.photo} resizeMode="contain" />}
+  const client = store.clients.find(c => c.id === clientId)
+  if (!client) return <Page><Empty title="Paciente no encontrado" detail="Volvé a la lista de pacientes." /></Page>
+  return <Page><View style={[styles.card, styles.row]}><Avatar {...client} /><View style={{ flex: 1 }}><Text style={styles.heading}>{getClientFullName(client)}</Text><Text style={styles.muted}>Paciente</Text></View></View>
+    <View style={styles.card}>
     <Choices label="Etapa" value={type} onChange={setType} options={(Object.keys(PHOTO_TYPE_LABELS) as PhotoType[]).map(value => ({ value, label: PHOTO_TYPE_LABELS[value] }))} />
+    {uri ? <Image source={{ uri }} accessibilityLabel="Vista previa de la foto" style={styles.photo} resizeMode="contain" /> : <View style={{ borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, borderRadius: 16, padding: 32, alignItems: 'center', gap: 12 }}><ImageIcon size={40} color={colors.primary} /><Text style={[styles.muted, { textAlign: 'center' }]}>Seleccioná una imagen para registrar la evolución</Text></View>}
+    <View style={styles.row}><Camera size={22} color={colors.primary} /><Button title="Tomar foto" onPress={() => { void pick(true) }} disabled={busy} /><Button secondary title="Elegir de galería" onPress={() => { void pick(false) }} disabled={busy} /></View>
     <Field label="Procedimiento" value={procedure} onChangeText={setProcedure} /><Field label="Notas" value={notes} onChangeText={setNotes} multiline />
+    </View>
     <Button title={busy ? 'Procesando…' : 'Guardar foto'} onPress={save} disabled={busy || !uri} />
   </Page>
 }
@@ -63,7 +67,7 @@ export function PhotosScreen({ route, navigation }: ScreenProps<'Photos'>) {
   const [selected, setSelected] = useState<string[]>([])
   const [filter, setFilter] = useState('all')
   const comparisons = selected.map(id => photos.find(p => p.id === id)).filter(p => !!p)
-  return <Page><Text style={styles.title}>Fotos y evolución</Text><Button title="Agregar foto" onPress={() => navigation.navigate('PhotoForm', { clientId })} />
+  return <Page><Button title="Agregar foto" onPress={() => navigation.navigate('PhotoForm', { clientId })} />
     <Choices label="Mostrar" value={filter} onChange={setFilter} options={[{ value: 'all', label: 'Todas' }, ...Object.entries(PHOTO_TYPE_LABELS).map(([value, label]) => ({ value, label }))]} />
     {comparisons.length === 2 && <View style={styles.card}><Text style={styles.heading}>Comparación</Text><View style={{ flexDirection: 'row', gap: 8 }}>{comparisons.map(p => <View key={p.id} style={{ flex: 1, gap: 6 }}><Text style={styles.text}>{PHOTO_TYPE_LABELS[p.type]}</Text><Image source={{ uri: photoUri(p.fileUrl) }} accessibilityLabel={`${PHOTO_TYPE_LABELS[p.type]}: ${p.procedure || 'Foto clínica'}`} style={styles.photo} resizeMode="contain" /><Text style={styles.muted}>{formatDate(p.takenAt)}</Text></View>)}</View><Button secondary title="Limpiar comparación" onPress={() => setSelected([])} /></View>}
     {!!photos.length && <Text style={styles.muted}>Seleccioná dos fotos para compararlas.</Text>}
