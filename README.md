@@ -7,7 +7,7 @@
 3. Conectar el celular y la computadora al mismo Wi-Fi.
 4. Abrir el QR con Expo Go en Android o con la cámara del iPhone.
 5. Mantener la terminal abierta mientras se usa la app. Debe estar seleccionado
-   Expo Go, no un development build. La versión de Expo Go debe admitir SDK 57.
+   Expo Go, no un development build. La versión de Expo Go debe admitir SDK 58.
 
 La entrada `index.js` carga `src/entry.native.ts` en iOS/Android y registra
 `src/native/NativeApp.tsx`. Las pantallas usan componentes React Native,
