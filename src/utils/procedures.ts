@@ -12,7 +12,7 @@ const FOLLOW_UPS: Record<string, Control[]> = {
   Blefaroplastia: [{ days: 2, label: '2 días' }, { days: 7, label: '7 días' }],
 }
 
-export function getFollowUpNotifications(appointments: Appointment[], clients: Client[], day: string): Notification[] {
+export function getFollowUpNotifications(appointments: Appointment[], clients: Client[], day: string, range: 'due' | 'upcoming' = 'due'): Notification[] {
   return appointments.flatMap((appointment) => {
     if (appointment.status !== 'scheduled' && appointment.status !== 'completed') return []
     const client = clients.find((item) => item.id === appointment.clientId)
@@ -21,7 +21,7 @@ export function getFollowUpNotifications(appointments: Appointment[], clients: C
       const base = parseISO(appointment.date)
       const due = 'days' in control ? addDays(base, control.days) : addMonths(base, control.months)
       const date = format(due, 'yyyy-MM-dd')
-      if (date > day) return []
+      if (range === 'due' ? date > day : date < day) return []
       return [{
         id: 'followup-' + appointment.id + '-' + index,
         type: 'followUp' as const,

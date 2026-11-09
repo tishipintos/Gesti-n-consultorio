@@ -81,3 +81,42 @@ test('follow-up and payment reminders keep their existing timing rules', () => {
     assert.equal(restored.time, '10:00')
   }
 })
+
+test('profiles share the calendar and persist separate scheduling and attending roles', () => {
+  saved.set('clinic_data', JSON.stringify({ clients: [], photos: [], appointments: [{ id: 'legacy' }] }))
+  const store = reload().useStore
+  assert.equal(store.getState().activeProfile, 'coti')
+  const appointment = store.getState().addAppointment({ clientId: 'patient', procedure: 'Botox', attendedBy: 'pitu' })
+  store.getState().setActiveProfile('pitu')
+  assert.equal(store.getState().appointments.length, 2)
+  store.getState().updateAppointment(appointment.id, { notes: 'Updated', scheduledBy: 'pitu' })
+  const restored = reload().useStore.getState()
+  assert.equal(restored.activeProfile, 'pitu')
+  assert.equal(restored.appointments[0].scheduledBy, undefined)
+  assert.equal(restored.appointments[1].scheduledBy, 'coti')
+  assert.equal(restored.appointments[1].attendedBy, 'pitu')
+})
+
+test('profile lists include only the attending profile, in chronological order', () => {
+  const { getProfileSections } = require('../src/utils/profiles.ts')
+  const client = { id: 'patient', firstName: 'Ana', lastName: 'Prueba' }
+  const past = { id: 'past', clientId: client.id, procedure: 'Botox', status: 'completed', date: '2026-09-01', time: '10:00', scheduledBy: 'coti', attendedBy: 'pitu' }
+  const future = { ...past, id: 'future', date: '2026-09-10', status: 'scheduled', scheduledBy: 'pitu' }
+  const now = new Date('2026-09-05T12:00:00')
+  const appointments = [
+    future,
+    { ...past, id: 'older', date: '2026-08-01' },
+    { ...future, id: 'sooner', date: '2026-09-06' },
+    { ...past, id: 'unassigned', scheduledBy: 'pitu', attendedBy: undefined },
+    { ...future, id: 'unassigned-future', scheduledBy: 'pitu', attendedBy: undefined },
+    { ...future, id: 'cancelled', status: 'cancelled' },
+    past,
+  ]
+  const pitu = getProfileSections('pitu', appointments, [client], now)
+  const coti = getProfileSections('coti', appointments, [client], now)
+  assert.deepEqual(pitu.history.map(a => a.id), ['past', 'older'])
+  assert.deepEqual(pitu.future.map(a => a.id), ['sooner', 'future'])
+  assert.deepEqual(pitu.followUps.map(a => a.date), ['2026-09-08'])
+  assert.deepEqual(coti.history, [])
+  assert.equal(coti.future.length + coti.followUps.length, 0)
+})

@@ -1,3 +1,4 @@
+import { notificationDisplay } from '../utils/notificationDisplay'
 import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Calendar, Stethoscope, Clock, DollarSign } from 'lucide-react'
@@ -66,9 +67,9 @@ export function NotificationsScreen() {
             description="Las notificaciones se generan automáticamente según los turnos y pacientes"
           />
         ) : (
-          <div className="app-stack">
-            {sections.map((section, sIdx) => (
-              <div key={section.key} className={`animate-slide-up stagger-${sIdx + 1} opacity-0`}>
+          <div className="app-stack notification-layout">
+            {sections.map(section => (
+              <div key={section.key} className="min-w-0">
                 <div className="flex items-center gap-2 mb-3">
                   <section.icon size={14} className={section.color} aria-hidden="true" />
                   <h2 className="text-xs font-semibold text-text-secondary tracking-wide uppercase">
@@ -76,34 +77,19 @@ export function NotificationsScreen() {
                   </h2>
                 </div>
                 <div className="flex flex-col gap-2" aria-label={section.title}>
-                  {section.items.map((notification) => (
-                    <Card
-                      key={notification.id}
-                      onClick={() => navigate(`/clients/${notification.clientId}`)}
-                      className={`notification-card ${notification.type === 'paymentDue' ? 'notification-payment' : ''}`}
-                      padding={false}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className="notification-icon w-8 h-8 mt-0.5 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#D9E9FF] text-[#245DA8]"
-                          aria-hidden="true"
-                        >
-                          {notification.type === 'paymentDue' ? <DollarSign size={16} /> : <Bell size={16} />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="notification-name font-semibold text-[#193D70] break-words">
-                            {notification.clientName}
-                          </p>
-                          <p className="notification-title text-[#193D70] break-words mt-0.5">
-                            {notification.title}
-                          </p>
-                          <p className="notification-detail text-[#456184] break-words mt-1">
-                            {notification.subtitle}
-                          </p>
+                  {section.items.map(notification => {
+                    const display = notificationDisplay(notification)
+                    const Icon = notification.type === 'nextTreatment' ? Stethoscope : section.icon
+                    return <Card key={notification.id} onClick={() => navigate(`/clients/${notification.clientId}`)} className="notification-card" padding={false}>
+                      <div className="flex items-center gap-3">
+                        <Icon size={20} color={display.color} className="shrink-0" aria-hidden="true" />
+                        <div className="min-w-0">
+                          <p className="font-extrabold leading-tight text-text-primary break-words">{display.title}</p>
+                          <p className="text-sm text-text-secondary break-words">{display.description}</p>
                         </div>
                       </div>
                     </Card>
-                  ))}
+                  })}
                 </div>
               </div>
             ))}

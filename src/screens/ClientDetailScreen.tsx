@@ -1,5 +1,6 @@
+import { appointmentAttribution } from '../utils/profiles'
 import { useState, useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Camera, Calendar, Phone, Mail, Edit, ChevronDown, DollarSign } from 'lucide-react'
 import { useStore } from '../store'
 import {
@@ -102,14 +103,14 @@ export function ClientDetailScreen({ toast }: { toast: (args: { type: 'success' 
               </h2>
               {client.phone && (
                 <div className="flex items-center gap-1.5 text-text-secondary fluid-sm">
-                  <Phone size={18} />
+                  <Phone size={18} className="shrink-0" aria-hidden="true" />
                   <span>{client.phone}</span>
                 </div>
               )}
               {client.email && (
                 <div className="flex items-center gap-1.5 text-text-secondary fluid-sm">
-                  <Mail size={18} />
-                  <span className="truncate">{client.email}</span>
+                  <Mail size={18} className="shrink-0" aria-hidden="true" />
+                  <span className="min-w-0 [overflow-wrap:anywhere]">{client.email}</span>
                 </div>
               )}
             </div>
@@ -168,6 +169,7 @@ export function ClientDetailScreen({ toast }: { toast: (args: { type: 'success' 
             <div id="client-appointments" className="space-y-2">
               {visibleAppointments.map((apt) => (
                 <Card key={apt.id} padding={false} className="p-3">
+                  <p className="text-xs text-text-secondary mb-1">{appointmentAttribution(apt)}</p>
                   <div className="flat-controls flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -182,6 +184,7 @@ export function ClientDetailScreen({ toast }: { toast: (args: { type: 'success' 
                         {formatDate(apt.date, 'dd MMM yyyy')}
                       </p>
                       {apt.procedure && <p className="fluid-xs text-text-secondary mt-1 break-words">{apt.procedure}</p>}
+                      <Link className="inline-flex items-center min-h-11 text-sm font-semibold text-primary underline" to={'/clients/' + apt.clientId + '/appointments/' + apt.id + '/edit'}>Editar turno</Link>
                     </div>
                     <button
                       type="button"

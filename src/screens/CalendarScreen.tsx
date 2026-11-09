@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+import { appointmentAttribution } from '../utils/profiles'
 import { useState, useMemo, useEffect } from 'react'
 import { parseISO } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
@@ -107,7 +109,7 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
   }
 
   return (
-    <div className="app-page bg-bg flex flex-col">
+    <div className="app-page agenda-page wide-page bg-bg flex flex-col">
       <Header
         title="Agenda"
         rightAction={
@@ -119,21 +121,21 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
         }
       />
 
-      <main className="app-content app-stack">
-        <Card padding={false} className="flat-controls">
+      <main className="app-content app-stack agenda-layout">
+        <Card padding={false} className="agenda-month flat-controls">
           <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-            <button onClick={handlePrevMonth} className="w-10 h-10 -ml-1 rounded-full bg-primary/8 text-primary flex items-center justify-center press-scale" aria-label="Mes anterior">
+            <button onClick={handlePrevMonth} className="w-11 h-11 -ml-1 rounded-full bg-primary/8 text-primary flex items-center justify-center press-scale" aria-label="Mes anterior">
               <ChevronLeft size={22} className="text-text-secondary" />
             </button>
             <div className="flex flex-col items-center gap-0.5">
               <span className="text-base font-extrabold text-text-primary capitalize tracking-[-0.02em]" aria-live="polite">
                 {formatDate(currentMonth, 'MMMM yyyy')}
               </span>
-              <button onClick={handleToday} className="fluid-xs text-primary font-bold press-scale" type="button">
+              <button onClick={handleToday} className="text-xs min-h-11 px-2 text-primary font-bold press-scale" type="button">
                 Ir a hoy
               </button>
             </div>
-            <button onClick={handleNextMonth} className="w-10 h-10 -mr-1 rounded-full bg-primary/8 text-primary flex items-center justify-center press-scale" aria-label="Mes siguiente">
+            <button onClick={handleNextMonth} className="w-11 h-11 -mr-1 rounded-full bg-primary/8 text-primary flex items-center justify-center press-scale" aria-label="Mes siguiente">
               <ChevronRight size={22} className="text-text-secondary" />
             </button>
           </div>
@@ -161,11 +163,11 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
                     hapticFeedback()
                     setSelectedDate(day)
                   }}
-                  className={`calendar-cell min-h-12 transition-all duration-200 press-scale ${
+                  className={`calendar-cell min-h-9 transition-all duration-200 press-scale ${
                     !inMonth
-                      ? 'text-text-muted/30'
+                      ? 'text-text-muted'
                       : selected
-                      ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-[1.03]'
+                      ? 'bg-primary text-white'
                       : today
                       ? 'bg-primary/10 text-primary'
                       : 'text-text-primary hover:bg-gray-50'
@@ -195,16 +197,17 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
         </Card>
 
         <section className="flex-1" aria-labelledby="agenda-heading">
-          <h2 id="agenda-heading" className="text-lg font-extrabold text-text-primary mb-0.5 tracking-[-0.025em] capitalize">
-            Turnos — {formatDate(selectedDate, 'EEEE d')}
-          </h2>
-          <div className="flex items-center justify-between mb-4">
-            <p className="fluid-xs text-text-secondary capitalize">{formatDate(selectedDate, "MMMM 'de' yyyy")}</p>
-            {appointmentsForDate.length > 0 && (
-              <span className="fluid-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                {appointmentsForDate.length} {appointmentsForDate.length === 1 ? 'turno' : 'turnos'}
-              </span>
-            )}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-[#d9cfbb] pb-3 mb-4">
+            <span aria-hidden="true" className="text-4xl font-extrabold leading-none tracking-tight tabular-nums text-text-primary">{formatDate(selectedDate, 'd')}</span>
+            <div className="flex-1 min-w-0">
+              <h2 id="agenda-heading" className="text-base font-extrabold capitalize">
+                {formatDate(selectedDate, 'EEEE')}<span className="sr-only"> {formatDate(selectedDate, 'd')}</span>
+              </h2>
+              <p className="text-sm text-text-secondary">{formatDate(selectedDate, "MMMM 'de' yyyy")}</p>
+            </div>
+            <span className="text-sm font-semibold text-text-secondary tabular-nums">
+              {appointmentsForDate.length} {appointmentsForDate.length === 1 ? 'turno' : 'turnos'}
+            </span>
           </div>
 
           {isLoading ? (
@@ -237,7 +240,7 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
           ) : (
             <div className="space-y-2">
               {appointmentsForDate.map((appointment, index) => (
-                <article key={appointment.id} className={`relative grid grid-cols-[0.75rem_max-content_minmax(0,1fr)] gap-x-2 animate-slide-up stagger-${Math.min(index + 1, 6)} opacity-0`}>
+                <article key={appointment.id} className="relative grid grid-cols-[0.75rem_max-content_minmax(0,1fr)] gap-x-2">
                   <div className="relative" aria-hidden="true">
                     {index > 0 && <span className="absolute left-1/2 top-0 bottom-1/2 w-px -translate-x-1/2 bg-primary/25" />}
                     {index < appointmentsForDate.length - 1 && (
@@ -249,13 +252,13 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
                     <time dateTime={appointment.date + 'T' + appointment.time} className="block text-sm leading-5 font-extrabold text-primary tabular-nums">
                       {formatTime(appointment.time)}
                     </time>
-                    {appointment.id === nextAppointmentId && <span className="sr-only">Pr?xima consulta</span>}
                   </div>
-                  <div className={`rounded-2xl px-4 py-3.5 shadow-sm ${index % 3 === 0 ? 'bg-primary/10' : index % 3 === 1 ? 'bg-secondary/10' : 'bg-accent/10'}`}>
+                  <div className="rounded-xl border border-[#e8dfcf] bg-card px-3 py-2.5">
                     <div className="flat-controls flex items-start gap-3">
                       <div className="flex-1 min-w-0">
+                        {appointment.id === nextAppointmentId && <p className="mb-1 text-xs font-bold text-primary">Próximo turno</p>}
                         {appointment.client && (
-                          <p className="fluid-sm font-bold text-text-primary truncate">
+                          <p className="fluid-sm font-bold text-text-primary break-words">
                             {getClientFullName(appointment.client)}
                           </p>
                         )}
@@ -269,6 +272,8 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
                             </span>
                           )}
                         </div>
+                        <p className="text-xs text-text-secondary mt-1">{appointmentAttribution(appointment)}</p>
+                        {appointment.client && <Link className="inline-flex items-center min-h-11 text-sm font-semibold text-primary underline" to={'/clients/' + appointment.clientId + '/appointments/' + appointment.id + '/edit'}>Editar turno</Link>}
                       </div>
                       <button
                         onClick={() => {
@@ -289,7 +294,7 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
         </section>
       </main>
 
-      <FAB onClick={() => setBookingOpen(true)} label="Agendar" />
+      <FAB onClick={() => setBookingOpen(true)} label="Agendar" appointment />
       {bookingOpen && (
         <QuickAppointmentDialog
           initialDate={formatDate(selectedDate, 'yyyy-MM-dd')}

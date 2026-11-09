@@ -1,3 +1,4 @@
+import { usePageGeometry } from './usePageGeometry'
 import { useLayoutEffect, useState } from 'react'
 import { Alert, Linking, Pressable, SectionList, Text, TextInput, View } from 'react-native'
 import { Calendar, Camera, ChevronDown, ChevronUp, Edit, Mail, Phone, Search, Users } from 'lucide-react-native'
@@ -15,6 +16,7 @@ import { attempt, confirmDelete } from './actions'
 import { AppointmentCard } from './ScheduleScreens'
 
 export function PatientsScreen() {
+  const { frame } = usePageGeometry()
   const navigation = useNavigation<NativeStackNavigationProp<RootStack>>()
   const clients = useStore(s => s.clients)
   const [query, setQuery] = useState('')
@@ -28,8 +30,8 @@ export function PatientsScreen() {
   }
   const create = () => navigation.navigate('ClientForm')
   return <View style={styles.page}>
-    <SectionList contentContainerStyle={[styles.content, { paddingBottom: 200 }]} sections={[...grouped].map(([title, data]) => ({ title, data }))} keyExtractor={c => c.id} stickySectionHeadersEnabled={false} keyboardShouldPersistTaps="handled"
-      ListHeaderComponent={<View style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 }]}><Search size={22} color={colors.muted} /><TextInput accessibilityLabel="Buscar pacientes por nombre, teléfono o email" placeholder="Buscar por nombre, teléfono o email..." placeholderTextColor={colors.muted} value={query} onChangeText={setQuery} style={{ flex: 1, minHeight: 32, fontFamily: fonts.regular, fontSize: 16, color: colors.text, padding: 0 }} /></View>}
+    <SectionList contentContainerStyle={[styles.content, { paddingBottom: 200, ...frame }]} sections={[...grouped].map(([title, data]) => ({ title, data }))} keyExtractor={c => c.id} stickySectionHeadersEnabled={false} keyboardShouldPersistTaps="handled"
+      ListHeaderComponent={<View style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 }]}><Search size={22} color={colors.muted} /><TextInput accessibilityLabel="Buscar pacientes por nombre, teléfono o email" placeholder="Buscar pacientes" placeholderTextColor={colors.muted} value={query} onChangeText={setQuery} style={{ flex: 1, minWidth: 0, minHeight: 32, fontFamily: fonts.regular, fontSize: 16, color: colors.text, padding: 0 }} /></View>}
       ListEmptyComponent={<Empty icon={Users} title={query ? 'Sin resultados' : 'Sin pacientes'} detail={query ? 'No se encontraron pacientes con esos datos' : 'Agregá tu primer paciente para comenzar'} action={!query ? { title: 'Agregar paciente', onPress: create } : undefined} />}
       renderSectionHeader={({ section }) => <Text style={[styles.label, { marginTop: 8 }]}>{section.title}</Text>}
       renderItem={({ item }) => <Pressable accessibilityRole="button" accessibilityLabel={'Ver ficha de ' + getClientFullName(item)} onPress={() => navigation.navigate('Client', { id: item.id })} style={({ pressed }) => [styles.card, { flexDirection: 'row', alignItems: 'center', opacity: pressed ? 0.7 : 1 }]}><Avatar {...item} /><View style={{ flex: 1 }}><Text style={{ fontFamily: fonts.semibold, color: colors.text, fontSize: 16 }}>{getClientFullName(item)}</Text>{!!(item.phone || item.email) && <Text style={styles.muted}>{item.phone || item.email}</Text>}</View></Pressable>} />

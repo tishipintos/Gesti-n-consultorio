@@ -1,3 +1,4 @@
+import { AppointmentIcon } from './AppointmentIcon'
 import { Plus } from 'lucide-react'
 import { hapticFeedback } from '../utils'
 
@@ -5,9 +6,10 @@ interface FABProps {
   onClick: () => void
   icon?: React.ReactNode
   label?: string
+  appointment?: boolean
 }
 
-export function FAB({ onClick, icon, label }: FABProps) {
+export function FAB({ onClick, icon, label, appointment }: FABProps) {
   return (
     <button
       onClick={() => {
@@ -24,7 +26,7 @@ export function FAB({ onClick, icon, label }: FABProps) {
       }}
       aria-label={label || 'Agregar'}
     >
-      {icon || <Plus size={24} strokeWidth={2.5} />}
+      {icon || (appointment ? <AppointmentIcon /> : <Plus aria-hidden="true" size={24} strokeWidth={2} />)}
       {label && <span className="fluid-sm font-semibold tracking-tight">{label}</span>}
     </button>
   )

@@ -18,7 +18,7 @@ export function Avatar({ firstName, lastName, id, size = 'md' }: AvatarProps) {
     <div
       role="img"
       aria-label={`Avatar de ${firstName} ${lastName}`}
-      className={`rounded-full flex items-center justify-center font-bold ring-2 ring-white/80 shadow-sm ${sizes[size]} ${getAvatarColor(id)}`}
+      className={`rounded-full flex shrink-0 items-center justify-center font-bold ring-2 ring-white/80 shadow-sm ${sizes[size]} ${getAvatarColor(id)}`}
     >
       {getInitials(firstName, lastName)}
     </div>

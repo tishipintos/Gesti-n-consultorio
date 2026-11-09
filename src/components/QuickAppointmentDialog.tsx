@@ -1,3 +1,5 @@
+import { AttendingField } from './AttendingField'
+import type { Profile } from '../types'
 import { PROCEDURES, isAvailableProcedure } from '../utils/procedures'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ChevronRight, Search, X } from 'lucide-react'
@@ -26,6 +28,7 @@ export function QuickAppointmentDialog({ initialDate, onClose, onSaved, onCreate
   const [date, setDate] = useState(initialDate)
   const [time, setTime] = useState('')
   const [procedure, setProcedure] = useState('')
+  const [attendedBy, setAttendedBy] = useState<Profile>()
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
   const client = clients.find((item) => item.id === clientId)
@@ -75,7 +78,7 @@ export function QuickAppointmentDialog({ initialDate, onClose, onSaved, onCreate
     }
     savingRef.current = true
     try {
-      addAppointment({ clientId: client.id, date, time, procedure, notes: notes.trim() || undefined, status: 'scheduled' })
+      addAppointment({ clientId: client.id, date, time, procedure, attendedBy, notes: notes.trim() || undefined, status: 'scheduled' })
     } catch {
       savingRef.current = false
       setError('No se pudo guardar el turno. Intente nuevamente.')
@@ -96,7 +99,7 @@ export function QuickAppointmentDialog({ initialDate, onClose, onSaved, onCreate
         <div className="quick-appointment-body">
           <div className="client-search surface" style={{ marginBottom: '1rem' }}>
             <Search size={22} aria-hidden="true" />
-            <input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)} aria-label="Buscar clientes por nombre, tel?fono o email" placeholder="Buscar cliente?" />
+            <input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)} aria-label="Buscar clientes por nombre, teléfono o email" placeholder="Buscar cliente" />
           </div>
           <p className="text-sm text-text-secondary mb-3" role="status">{matches.length} {matches.length === 1 ? 'cliente' : 'clientes'}</p>
           <div className="quick-client-list flat-controls">
@@ -119,11 +122,12 @@ export function QuickAppointmentDialog({ initialDate, onClose, onSaved, onCreate
           <p className="text-text-secondary mb-5">Para <strong className="text-text-primary break-words">{client ? getClientFullName(client) : 'cliente no disponible'}</strong></p>
           <div className="quick-date-time">
             <label>Fecha<input ref={dateRef} type="date" required value={date} onChange={(event) => { setDate(event.target.value); setTime(''); setError('') }} /></label>
-            <label>Hora<select required value={time} onChange={(event) => { setTime(event.target.value); setError('') }} disabled={!date || available.length === 0}>
+            <label>Hora<select aria-describedby="quick-time-hint" required value={time} onChange={(event) => { setTime(event.target.value); setError('') }} disabled={!date || available.length === 0}>
               <option value="">Elegir hora</option>
-              {slots.map((slot) => <option key={slot} value={slot} disabled={occupied.has(slot)}>{slot}{occupied.has(slot) ? ' ? Ocupado' : ''}</option>)}
+              {slots.map((slot) => <option key={slot} value={slot} disabled={occupied.has(slot)}>{slot}{occupied.has(slot) ? ' · Ocupado' : ''}</option>)}
             </select></label>
           </div>
+          <p id="quick-time-hint" className="mt-2 text-sm text-text-secondary">Los horarios ocupados no se pueden elegir.</p>
           {date && available.length === 0 && <p className="text-error mt-3" role="status">No quedan horarios libres. Elegí otra fecha.</p>}
           <label className="mt-5">Motivo de consulta
             <select required value={procedure} onChange={(event) => { setProcedure(event.target.value); setError('') }}>
@@ -131,6 +135,7 @@ export function QuickAppointmentDialog({ initialDate, onClose, onSaved, onCreate
               {PROCEDURES.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
+          <AttendingField value={attendedBy} onChange={setAttendedBy} className="w-full" />
           <details className="quick-optional">
             <summary>Agregar notas <span className="text-sm text-text-secondary">(opcional)</span></summary>
             <label>Notas<textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={2} placeholder="Detalles del turno" /></label>

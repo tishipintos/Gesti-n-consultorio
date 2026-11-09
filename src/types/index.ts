@@ -1,3 +1,5 @@
+export type Profile = 'coti' | 'pitu'
+
 export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled' | 'noShow'
 
 export type PhotoType = 'before' | 'after' | 'progress'
@@ -23,6 +25,8 @@ export interface Appointment {
   notes?: string
   status: AppointmentStatus
   paid?: boolean
+  scheduledBy?: Profile
+  attendedBy?: Profile
   createdAt: string
 }
 

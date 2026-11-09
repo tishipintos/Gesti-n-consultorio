@@ -76,7 +76,7 @@ export function ClientsScreen() {
   })).filter((group) => group.clients.length > 0)
 
   return (
-    <div className="app-page bg-bg flex flex-col">
+    <div className="app-page with-fab bg-bg flex flex-col">
       <Header
         title="Pacientes"
         subtitle={`${clients.length} total`}
@@ -84,13 +84,13 @@ export function ClientsScreen() {
 
       <main
         className="flex-1"
-        style={{ width: '100%', maxWidth: '32rem', marginInline: 'auto', padding: '1.25rem 1rem 0' }}
+        style={{ width: '100%', maxWidth: 'var(--content-width)', marginInline: 'auto', padding: '1.25rem 1rem 0' }}
       >
         <div className="client-search surface" style={{ width: '100%', marginBottom: '1.25rem' }}>
           <Search size={22} aria-hidden="true" />
           <input
             type="text"
-            placeholder="Buscar por nombre, teléfono o email..."
+            placeholder="Buscar pacientes"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setScrollLetter(null) }}
             aria-label="Buscar pacientes por nombre, teléfono o email"
@@ -152,14 +152,14 @@ export function ClientsScreen() {
                     id={client.id}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-base font-semibold text-text-primary truncate">
+                    <p className="text-base font-semibold text-text-primary break-words">
                       {getClientFullName(client)}
                     </p>
                     {client.phone && (
-                      <p className="text-sm text-text-secondary truncate">{client.phone}</p>
+                      <p className="text-sm text-text-secondary break-words">{client.phone}</p>
                     )}
                     {client.email && !client.phone && (
-                      <p className="text-sm text-text-secondary truncate">{client.email}</p>
+                      <p className="text-sm text-text-secondary break-words">{client.email}</p>
                     )}
                   </div>
                 </div>

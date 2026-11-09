@@ -1,12 +1,14 @@
+import type { ProfileSection } from '../utils/profiles'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { NavigatorScreenParams } from '@react-navigation/native'
-export type MainTabs = { Agenda: { date?: string } | undefined; Pacientes: undefined; Recordatorios: undefined }
+export type MainTabs = { Agenda: { date?: string } | undefined; Pacientes: undefined; Recordatorios: undefined; Perfil: undefined }
 export type RootStack = {
   Home: NavigatorScreenParams<MainTabs> | undefined
+  ProfileSection: { section: ProfileSection }
   Client: { id: string }
   ClientForm: { id?: string; appointmentDate?: string } | undefined
   SelectPatient: { date: string; clientId?: string }
-  AppointmentForm: { clientId?: string; appointmentId?: string; date?: string; fromAgenda?: boolean } | undefined
+  AppointmentForm: { clientId?: string; appointmentId?: string; date?: string; fromAgenda?: boolean; fromProfile?: boolean } | undefined
   PhotoForm: { clientId: string }
 }
 export type ScreenProps<T extends keyof RootStack> = NativeStackScreenProps<RootStack, T>

@@ -15,19 +15,19 @@ interface ToastProps {
 const config = {
   success: {
     icon: CheckCircle,
-    bg: 'bg-success/10 border-success/20',
+    bg: 'border-success/25',
     iconColor: 'text-success',
     text: 'text-success',
   },
   error: {
     icon: AlertCircle,
-    bg: 'bg-error/10 border-error/20',
+    bg: 'border-error/25',
     iconColor: 'text-error',
     text: 'text-error',
   },
   info: {
     icon: Info,
-    bg: 'bg-info/10 border-info/20',
+    bg: 'border-info/25',
     iconColor: 'text-info',
     text: 'text-info',
   },
@@ -46,7 +46,7 @@ function ToastItem({ toast, onDismiss }: ToastProps) {
       role="status"
       aria-live="polite"
       className={`
-        flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-lg backdrop-blur-xl
+        flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg bg-card
         transition-all duration-300 ease-out
         ${bg}
         ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}
@@ -56,12 +56,11 @@ function ToastItem({ toast, onDismiss }: ToastProps) {
       <span className={`text-sm font-medium flex-1 ${text}`}>{toast.message}</span>
       <button
         onClick={() => onDismiss(toast.id)}
-        className={`text-xs ${text} opacity-60 hover:opacity-100 press-scale`}
+        className={`min-h-11 min-w-11 text-base ${text} press-scale`}
         aria-label="Cerrar"
       >
         ×
       </button>
-      <span className="sr-only">{toast.message}</span>
     </div>
   )
 }

@@ -13,6 +13,10 @@ import { PhotoFormScreen } from './screens/PhotoFormScreen'
 import { PhotoCompareScreen } from './screens/PhotoCompareScreen'
 import { NotificationsScreen } from './screens/NotificationsScreen'
 
+import { profileSections } from './utils/profiles'
+import type { ProfileSection } from './utils/profiles'
+import { ProfileScreen, ProfileSectionScreen } from './screens/ProfileScreen'
+
 function App() {
   const { toast, toasts, removeToast } = useToast()
 
@@ -21,7 +25,7 @@ function App() {
       <BrowserRouter>
         <WelcomeOverlay onComplete={() => {}} />
         <ToastContainer toasts={toasts} onDismiss={removeToast} />
-        <div className="min-h-screen bg-bg">
+        <div className="app-shell bg-bg">
           <Routes>
             <Route path="/" element={<Navigate to="/calendar" replace />} />
             <Route path="/calendar" element={<CalendarScreen toast={toast} />} />
@@ -32,6 +36,11 @@ function App() {
             <Route path="/clients/:id/appointments/new" element={<AppointmentFormScreen toast={toast} />} />
             <Route path="/clients/:id/photos/new" element={<PhotoFormScreen toast={toast} />} />
             <Route path="/clients/:id/photos/compare" element={<PhotoCompareScreen />} />
+            <Route path="/clients/:id/appointments/:appointmentId/edit" element={<AppointmentFormScreen toast={toast} />} />
+            <Route path="/profile" element={<ProfileScreen />} />
+            {(Object.keys(profileSections) as ProfileSection[]).map(section => (
+              <Route key={section} path={'/profile/' + profileSections[section].path} element={<ProfileSectionScreen section={section} />} />
+            ))}
             <Route path="/notifications" element={<NotificationsScreen />} />
           </Routes>
           <TabBar />

@@ -1,8 +1,14 @@
 import { isAvailableProcedure } from '../utils/procedures'
 import { create } from 'zustand'
-import type { Client, Appointment, ClientPhoto, ClinicData } from '../types'
+import type { Client, Appointment, ClientPhoto, ClinicData, Profile } from '../types'
 import { generateId } from '../utils'
 import { storage } from '../platform/storage'
+
+const PROFILE_KEY = 'clinic_active_profile'
+
+function loadProfile(): Profile {
+  try { return storage.getItem(PROFILE_KEY) === 'pitu' ? 'pitu' : 'coti' } catch { return 'coti' }
+}
 
 const STORAGE_KEY = 'clinic_data'
 export let storageLoadError: unknown = null
@@ -30,6 +36,8 @@ const saveToStorage = (state: ClinicData): void => {
 }
 
 interface StoreState {
+  activeProfile: Profile
+  setActiveProfile: (profile: Profile) => void
   clients: Client[]
   appointments: Appointment[]
   photos: ClientPhoto[]
@@ -37,7 +45,7 @@ interface StoreState {
   updateClient: (id: string, data: Partial<Client>) => void
   deleteClient: (id: string) => void
   getClient: (id: string) => Client | undefined
-  addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt'>) => Appointment
+  addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'scheduledBy'>) => Appointment
   updateAppointment: (id: string, data: Partial<Appointment>) => void
   deleteAppointment: (id: string) => void
   getAppointmentsForClient: (clientId: string) => Appointment[]
@@ -52,6 +60,11 @@ export const useStore = create<StoreState>((set, get) => {
   const initial = loadFromStorage()
 
   return {
+    activeProfile: loadProfile(),
+    setActiveProfile: (activeProfile) => {
+      storage.setItem(PROFILE_KEY, activeProfile)
+      set({ activeProfile })
+    },
     clients: initial.clients,
     appointments: initial.appointments,
     photos: initial.photos,
@@ -98,6 +111,7 @@ export const useStore = create<StoreState>((set, get) => {
       if (!isAvailableProcedure(appointmentData.procedure)) throw new Error('Elegí un motivo de consulta disponible')
       const appointment: Appointment = {
         ...appointmentData,
+        scheduledBy: get().activeProfile,
         id: generateId(),
         createdAt: new Date().toISOString(),
       }
@@ -113,7 +127,7 @@ export const useStore = create<StoreState>((set, get) => {
       if ('procedure' in data && !isAvailableProcedure(data.procedure)) throw new Error('Elegí un motivo de consulta disponible')
       set((state) => {
         const appointments = state.appointments.map((a) =>
-          a.id === id ? { ...a, ...data } : a
+          a.id === id ? { ...a, ...data, scheduledBy: a.scheduledBy } : a
         )
         saveToStorage({ ...state, appointments })
         return { appointments }

@@ -1,5 +1,7 @@
-﻿import { useRef, useState } from 'react'
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+﻿import { attendingOptions, parseProfile } from '../utils/profiles'
+import type { Profile } from '../types'
+import { useRef, useState } from 'react'
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react-native'
 import { useStore } from '../store'
@@ -14,12 +16,14 @@ const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u0
 const slots = getTimeSlots()
 
 export function SelectPatientScreen({ route, navigation }: ScreenProps<'SelectPatient'>) {
+  const { width, fontScale } = useWindowDimensions()
   const { clients, appointments, addAppointment } = useStore()
   const [search, setSearch] = useState('')
   const [clientId, setClientId] = useState(route.params.clientId || '')
   const [date, setDate] = useState(() => new Date(`${route.params.date}T12:00:00`))
   const [time, setTime] = useState('')
   const [procedure, setProcedure] = useState('')
+  const [attendedBy, setAttendedBy] = useState<Profile>()
   const [notes, setNotes] = useState('')
   const [showNotes, setShowNotes] = useState(false)
   const [error, setError] = useState('')
@@ -39,7 +43,7 @@ export function SelectPatientScreen({ route, navigation }: ScreenProps<'SelectPa
     if (!PROCEDURES.some(p => p === procedure)) { setError('Elegí un tratamiento.'); return }
     saving.current = true
     try {
-      addAppointment({ clientId, date: day, time, procedure, notes: notes.trim() || undefined, status: 'scheduled', paid: false })
+      addAppointment({ clientId, date: day, time, procedure, attendedBy, notes: notes.trim() || undefined, status: 'scheduled', paid: false })
     } catch {
       saving.current = false
       setError('No se pudo guardar el turno. Intentá nuevamente.')
@@ -57,7 +61,7 @@ export function SelectPatientScreen({ route, navigation }: ScreenProps<'SelectPa
           <Text accessibilityRole="header" style={[styles.heading, { flex: 1, fontSize: 18 }]}>{clientId ? 'Agendar turno' : '¿Para quién es el turno?'}</Text>
           <IconButton icon={X} label="Cerrar" onPress={close} />
         </View>
-        <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={{ flexGrow: 0 }} contentContainerStyle={{ padding: 20, paddingTop: 4, gap: 16 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={{ flexGrow: 0, flexShrink: 1 }} contentContainerStyle={{ padding: 20, paddingTop: 4, gap: 16 }}>
           {!clientId ? <>
             <View style={[styles.input, { flexDirection: 'row', alignItems: 'center', gap: 10 }]}><Search size={20} color={colors.muted} /><TextInput accessibilityLabel="Buscar clientes" placeholder="Buscar cliente..." placeholderTextColor={colors.muted} value={search} onChangeText={setSearch} autoCorrect={false} style={{ flex: 1, padding: 0, fontFamily: fonts.regular, fontSize: 16, color: colors.text }} /></View>
             <Text style={styles.muted}>{matches.length} {matches.length === 1 ? 'cliente' : 'clientes'}</Text>
@@ -66,13 +70,14 @@ export function SelectPatientScreen({ route, navigation }: ScreenProps<'SelectPa
             {!clients.length && <Button title="Agregar cliente" onPress={() => navigation.replace('ClientForm', { appointmentDate: day })} />}
           </> : <>
             <Text style={styles.muted}>Para <Text style={{ fontFamily: fonts.semibold, color: colors.text }}>{client ? getClientFullName(client) : 'Cliente no disponible'}</Text></Text>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
+            <View style={{ flexDirection: width / fontScale < 365 ? 'column' : 'row', gap: 12 }}>
               <View style={{ flex: 1 }}><DateField label="Día" value={date} onChange={value => { setDate(value); setTime(''); setError('') }} /></View>
               <View style={{ flex: 1 }}><SelectField label="Hora" maxOptionsHeight={216} value={time} placeholder="Elegir hora" onChange={value => { setTime(value); setError('') }} options={slots.map(value => ({ value, label: value + (occupied.has(value) ? ' · Ocupado' : ''), disabled: occupied.has(value) }))} /></View>
             </View>
             {slots.every(slot => occupied.has(slot)) && <Text style={{ color: colors.danger }}>No quedan horarios libres. Elegí otro día.</Text>}
             <SelectField label="Tratamiento" maxOptionsHeight={216} value={procedure} placeholder="Elegir tratamiento" onChange={value => { setProcedure(value); setError('') }} options={PROCEDURES.map(value => ({ value, label: value }))} />
             <View style={{ gap: 4 }}><Pressable accessibilityRole="button" accessibilityState={{ expanded: showNotes }} onPress={() => setShowNotes(!showNotes)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 }}><Text style={styles.text}>Notas</Text>{showNotes ? <ChevronDown size={18} color={colors.muted} /> : <ChevronRight size={18} color={colors.muted} />}</Pressable>
+              <SelectField label="Atendida por" value={attendedBy ?? ''} options={attendingOptions} onChange={value => setAttendedBy(parseProfile(value))} />
               {showNotes && <TextInput accessibilityLabel="Notas del tratamiento" placeholder="Comentario breve sobre el tratamiento" placeholderTextColor={colors.muted} value={notes} onChangeText={setNotes} multiline style={[styles.input, { minHeight: 76, textAlignVertical: 'top' }]} />}
             </View>
             {!!error && <Text accessibilityRole="alert" style={{ color: colors.danger }}>{error}</Text>}
