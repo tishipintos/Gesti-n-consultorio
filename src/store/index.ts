@@ -51,6 +51,7 @@ interface StoreState {
   getAppointmentsForClient: (clientId: string) => Appointment[]
   getAppointmentsForDate: (date: string) => Appointment[]
   addPhoto: (photo: Omit<ClientPhoto, 'id' | 'createdAt'>) => ClientPhoto
+  addPhotos: (photos: Omit<ClientPhoto, 'id' | 'createdAt'>[]) => ClientPhoto[]
   deletePhoto: (id: string) => void
   getPhotosForClient: (clientId: string) => ClientPhoto[]
   clearAllData: () => void
@@ -148,18 +149,21 @@ export const useStore = create<StoreState>((set, get) => {
     getAppointmentsForDate: (date) =>
       get().appointments.filter((a) => a.date === date),
 
-    addPhoto: (photoData) => {
-      const photo: ClientPhoto = {
-        ...photoData,
+    addPhoto: (photoData) => get().addPhotos([photoData])[0],
+
+    addPhotos: (photoData) => {
+      if (!photoData.length) return []
+      const added = photoData.map((photo): ClientPhoto => ({
+        ...photo,
         id: generateId(),
         createdAt: new Date().toISOString(),
-      }
+      }))
       set((state) => {
-        const photos = [...state.photos, photo]
+        const photos = [...state.photos, ...added]
         saveToStorage({ ...state, photos })
         return { photos }
       })
-      return photo
+      return added
     },
 
     deletePhoto: (id) => {

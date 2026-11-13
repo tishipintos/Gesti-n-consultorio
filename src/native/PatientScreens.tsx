@@ -3,6 +3,7 @@ import { useLayoutEffect, useState } from 'react'
 import { Alert, Linking, Pressable, SectionList, Text, TextInput, View } from 'react-native'
 import { Calendar, Camera, ChevronDown, ChevronUp, Edit, Mail, Phone, Search, Users } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useStore } from '../store'
 import { formatDate, getClientFullName } from '../utils'
@@ -16,6 +17,7 @@ import { attempt, confirmDelete } from './actions'
 import { AppointmentCard } from './ScheduleScreens'
 
 export function PatientsScreen() {
+  const insets = useSafeAreaInsets()
   const { frame } = usePageGeometry()
   const navigation = useNavigation<NativeStackNavigationProp<RootStack>>()
   const clients = useStore(s => s.clients)
@@ -30,11 +32,11 @@ export function PatientsScreen() {
   }
   const create = () => navigation.navigate('ClientForm')
   return <View style={styles.page}>
-    <SectionList contentContainerStyle={[styles.content, { paddingBottom: 200, ...frame }]} sections={[...grouped].map(([title, data]) => ({ title, data }))} keyExtractor={c => c.id} stickySectionHeadersEnabled={false} keyboardShouldPersistTaps="handled"
+    <SectionList contentContainerStyle={[styles.content, { gap: 0, paddingBottom: Math.max(insets.bottom, 12) + 164, ...frame }]} sections={[...grouped].map(([title, data]) => ({ title, data }))} keyExtractor={c => c.id} stickySectionHeadersEnabled={false} keyboardShouldPersistTaps="handled"
       ListHeaderComponent={<View style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 }]}><Search size={22} color={colors.muted} /><TextInput accessibilityLabel="Buscar pacientes por nombre, teléfono o email" placeholder="Buscar pacientes" placeholderTextColor={colors.muted} value={query} onChangeText={setQuery} style={{ flex: 1, minWidth: 0, minHeight: 32, fontFamily: fonts.regular, fontSize: 16, color: colors.text, padding: 0 }} /></View>}
       ListEmptyComponent={<Empty icon={Users} title={query ? 'Sin resultados' : 'Sin pacientes'} detail={query ? 'No se encontraron pacientes con esos datos' : 'Agregá tu primer paciente para comenzar'} action={!query ? { title: 'Agregar paciente', onPress: create } : undefined} />}
-      renderSectionHeader={({ section }) => <Text style={[styles.label, { marginTop: 8 }]}>{section.title}</Text>}
-      renderItem={({ item }) => <Pressable accessibilityRole="button" accessibilityLabel={'Ver ficha de ' + getClientFullName(item)} onPress={() => navigation.navigate('Client', { id: item.id })} style={({ pressed }) => [styles.card, { flexDirection: 'row', alignItems: 'center', opacity: pressed ? 0.7 : 1 }]}><Avatar {...item} /><View style={{ flex: 1 }}><Text style={{ fontFamily: fonts.semibold, color: colors.text, fontSize: 16 }}>{getClientFullName(item)}</Text>{!!(item.phone || item.email) && <Text style={styles.muted}>{item.phone || item.email}</Text>}</View></Pressable>} />
+      renderSectionHeader={({ section }) => <Text style={[styles.label, { marginTop: 24, marginBottom: 4, color: colors.primary }]}>{section.title}</Text>}
+      renderItem={({ item }) => <Pressable accessibilityRole="button" accessibilityLabel={'Ver ficha de ' + getClientFullName(item)} onPress={() => navigation.navigate('Client', { id: item.id })} style={({ pressed }) => [styles.listRow, { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: pressed ? colors.soft : 'transparent' }]}><Avatar {...item} size={40} /><View style={{ flex: 1, gap: 3 }}><Text style={{ fontFamily: fonts.medium, color: colors.text, fontSize: 16 }}>{getClientFullName(item)}</Text>{!!(item.phone || item.email) && <Text style={styles.muted}>{item.phone || item.email}</Text>}</View></Pressable>} />
     <FAB label="Paciente" onPress={create} />
   </View>
 }
@@ -43,20 +45,20 @@ export function PatientScreen({ route, navigation }: ScreenProps<'Client'>) {
   const client = state.clients.find(c => c.id === route.params.id)
   const [allAppointments, setAllAppointments] = useState(false)
   useLayoutEffect(() => {
-    navigation.setOptions({ title: client ? getClientFullName(client) : 'Paciente', headerRight: () => <IconButton icon={Edit} label="Editar paciente" onPress={() => navigation.navigate('ClientForm', { id: route.params.id })} /> })
+    navigation.setOptions({ title: 'Ficha del paciente', headerRight: () => <IconButton icon={Edit} label="Editar paciente" onPress={() => navigation.navigate('ClientForm', { id: route.params.id })} /> })
   }, [client, navigation, route.params.id])
   if (!client) return <Page><Empty title="Paciente no encontrado" detail="Volvé a la lista de pacientes." /></Page>
   const appointments = state.appointments.filter(a => a.clientId === client.id).sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`))
   return <Page>
-    <View style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: 16 }]}><Avatar {...client} size={64} /><View style={{ flex: 1, gap: 5 }}><Text style={[styles.heading, { fontSize: 22 }]}>{getClientFullName(client)}</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 16, paddingVertical: 8 }}><Avatar {...client} size={56} /><View style={{ flex: 1, gap: 8 }}><Text accessibilityRole="header" style={[styles.title, { fontSize: 24 }]}>{getClientFullName(client)}</Text>
     {client.phone && <Pressable accessibilityRole="link" accessibilityLabel={'Llamar a ' + client.phone} onPress={() => { void Linking.openURL(`tel:${client.phone!.replace(/[^+\d]/g, '')}`).catch(() => Alert.alert('No se pudo abrir el teléfono')) }} style={styles.row}><Phone size={16} color={colors.muted} /><Text style={styles.muted}>{client.phone}</Text></Pressable>}
     {client.email && <Pressable accessibilityRole="link" accessibilityLabel={'Enviar correo a ' + client.email} onPress={() => { void Linking.openURL(`mailto:${encodeURIComponent(client.email!)}`).catch(() => Alert.alert('No se pudo abrir el correo')) }} style={styles.row}><Mail size={16} color={colors.muted} /><Text style={[styles.muted, { flex: 1 }]}>{client.email}</Text></Pressable>}
     {client.dateOfBirth && <Text style={styles.muted}>Nacimiento: {formatDate(client.dateOfBirth)}</Text>}
     </View></View>
-    {!!client.notes && <View style={styles.card}><Text style={styles.label}>Historia Clínica</Text><Text style={styles.text}>{client.notes}</Text></View>}
+    {!!client.notes && <View style={{ gap: 12, paddingTop: 20, borderTopWidth: 1, borderTopColor: colors.border }}><Text accessibilityRole="header" style={styles.heading}>Historia Clínica</Text><Text style={styles.text}>{client.notes}</Text></View>}
     <View style={{ flexDirection: 'row', gap: 12 }}>
-      <Pressable accessibilityRole="button" onPress={() => navigation.navigate('PhotoForm', { clientId: client.id })} style={[styles.card, { flex: 1, minHeight: 128, alignItems: 'center', justifyContent: 'center' }]}><Camera size={28} color={colors.primary} /><Text style={{ fontFamily: fonts.bold, fontSize: 16, color: colors.text }}>Fotos</Text></Pressable>
-      <Pressable accessibilityRole="button" onPress={() => navigation.navigate('AppointmentForm', { clientId: client.id })} style={[styles.card, { flex: 1, minHeight: 128, alignItems: 'center', justifyContent: 'center' }]}><Calendar size={28} color={colors.primary} /><Text style={{ fontFamily: fonts.bold, fontSize: 16, color: colors.text }}>Cita</Text></Pressable>
+      <Pressable accessibilityRole="button" onPress={() => navigation.navigate('PhotoForm', { clientId: client.id })} style={({ pressed }) => [styles.button, { flex: 1, flexDirection: 'row', gap: 8, paddingHorizontal: 12, backgroundColor: pressed ? colors.tint : colors.surface, borderWidth: 1, borderColor: colors.border }]}><Camera size={20} color={colors.primary} /><Text style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.text }}>Fotos</Text></Pressable>
+      <Pressable accessibilityRole="button" onPress={() => navigation.navigate('AppointmentForm', { clientId: client.id })} style={({ pressed }) => [styles.button, { flex: 1, flexDirection: 'row', gap: 8, paddingHorizontal: 12, backgroundColor: pressed ? colors.tint : colors.surface, borderWidth: 1, borderColor: colors.border }]}><Calendar size={20} color={colors.primary} /><Text style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.text }}>Cita</Text></Pressable>
     </View>
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
       <Text style={[styles.heading, { flex: 1 }]}>Historial de turnos</Text>

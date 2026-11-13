@@ -3,7 +3,6 @@ import { ChevronRight } from 'lucide-react'
 import { useStore } from '../store'
 import { Link } from 'react-router-dom'
 import { Header } from '../components/Header'
-import { Card } from '../components/Card'
 import { useProfile } from '../hooks/useProfile'
 import { formatDate, getClientFullName } from '../utils'
 import { appointmentAttribution, profileName, profileOptions, profileSections } from '../utils/profiles'
@@ -20,15 +19,15 @@ export function ProfileScreen() {
   return <div className="app-page bg-bg">
     <Header title="Perfil" />
     <main className="app-content app-stack">
-      <Card className="profile-summary">
+      <section className="profile-summary">
         <h2 className="text-xl font-bold">{profileName(activeProfile)}</h2>
         <fieldset className="flex flex-wrap gap-2 mt-2">
           <legend className="text-sm text-text-secondary mb-2">Cambiar perfil</legend>
           {profileOptions.map(({ value, label }) => <button type="button" key={value} onClick={() => select(value)} aria-pressed={value === activeProfile} className={'min-h-11 px-4 rounded-xl font-semibold ' + (value === activeProfile ? 'bg-primary text-white' : 'bg-primary/10 text-text-primary')}>{label}</button>)}
         </fieldset>
         {error && <p role="alert" className="mt-2 text-error">No se pudo guardar el perfil.</p>}
-      </Card>
-      <div className="app-list">
+      </section>
+      <div className="app-list profile-settings">
         {Object.values(profileSections).map(section => <Link key={section.path} to={'/profile/' + section.path} className="profile-record flex min-h-12 items-center justify-between gap-3 rounded-xl bg-card p-4 font-bold">
           {section.title}<ChevronRight size={20} className="shrink-0 text-primary" aria-hidden="true" />
         </Link>)}

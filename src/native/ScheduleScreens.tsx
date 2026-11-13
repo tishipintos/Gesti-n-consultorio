@@ -1,9 +1,10 @@
 import { usePageGeometry } from './usePageGeometry'
 import { appointmentAttribution, attendingOptions, parseProfile } from '../utils/profiles'
 import type { Profile } from '../types'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Alert, FlatList, Pressable, ScrollView, Text, View } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { RouteProp } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
@@ -11,10 +12,9 @@ import { Clock, DollarSign, Trash2 } from 'lucide-react-native'
 import { MonthCalendar } from './MonthCalendar'
 import { AppointmentDatePicker } from './AppointmentDatePicker'
 import { Avatar, FAB, IconButton } from './chrome'
-import { onForeground } from '../platform/foreground'
 import type { Appointment } from '../types'
 import { useStore } from '../store'
-import { formatDate, getClientFullName, getTimeSlots, STATUS_LABELS } from '../utils'
+import { formatDate, getClientFullName, getTimeSlots } from '../utils'
 import { PROCEDURES } from '../utils/procedures'
 import type { MainTabs, RootStack, ScreenProps } from './navigation'
 import { Button, Empty, Field, Page, SelectField } from './ui'
@@ -31,6 +31,7 @@ export function AppointmentCard({ appointment, onEdit, onClient }: { appointment
   </Pressable>
 }
 export function ScheduleScreen() {
+  const insets = useSafeAreaInsets()
   const { frame, wide } = usePageGeometry('agenda')
   const navigation = useNavigation<NativeStackNavigationProp<RootStack>>()
   const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabs, 'Agenda'>>()
@@ -44,37 +45,34 @@ export function ScheduleScreen() {
   if (calendar.selection !== route.params) setCalendar({ selection: route.params, selectedDay, month: route.params?.date ? date : calendar.month })
   const setDate = (value: Date) => tabNavigation.setParams({ date: formatDate(value, 'yyyy-MM-dd') })
   const setMonth = (value: Date) => setCalendar({ selection: route.params, selectedDay, month: value })
-  const [now, setNow] = useState(() => Date.now())
   const { appointments, clients, deleteAppointment } = useStore()
-  useEffect(() => { const refresh = () => setNow(Date.now()); const timer = setInterval(refresh, 60000); const off = onForeground(refresh); return () => { clearInterval(timer); off() } }, [])
   const day = formatDate(date, 'yyyy-MM-dd')
   const items = appointments.filter(a => a.date === day).sort((a, b) => a.time.localeCompare(b.time))
   const counts = appointments.reduce<Record<string, number>>((result, a) => { result[a.date] = (result[a.date] || 0) + 1; return result }, {})
-  const nextId = appointments.filter(a => a.status === 'scheduled' && new Date(a.date + 'T' + a.time).getTime() >= now).sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))[0]?.id
   const book = () => navigation.navigate('SelectPatient', { date: day })
   const month = <MonthCalendar month={calendar.month} selected={date} onMonth={setMonth} onSelect={setDate} counts={counts} />
   return <View style={styles.page}>
-    <View style={{ flex: 1, flexDirection: wide ? 'row' : 'column', ...frame }}>
+    <View style={{ flex: 1, minHeight: 0, flexDirection: wide ? 'row' : 'column', ...frame }}>
     {wide && <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>{month}</ScrollView>}
-    <FlatList style={{ flex: 1 }} contentContainerStyle={[styles.content, { gap: 8, paddingBottom: 16 }]} data={items} keyExtractor={a => a.id} ListHeaderComponent={<View style={{ gap: 20, paddingBottom: 8 }}>
+    <FlatList style={{ flex: 1 }} contentContainerStyle={[styles.content, { gap: 0, paddingBottom: Math.max(insets.bottom, 12) + 164 }]} data={items} keyExtractor={a => a.id} ListHeaderComponent={<View style={{ gap: 20, paddingBottom: 8 }}>
       {!wide && month}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-        <Text accessible={false} importantForAccessibility="no" style={{ fontFamily: fonts.extra, fontSize: 36, color: colors.text, fontVariant: ['tabular-nums'] }}>{formatDate(date, 'd')}</Text>
+        <Text accessible={false} importantForAccessibility="no" style={{ fontFamily: fonts.medium, fontSize: 36, color: colors.text, fontVariant: ['tabular-nums'] }}>{formatDate(date, 'd')}</Text>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text accessibilityRole="header" accessibilityLabel={formatDate(date, 'EEEE d')} style={[styles.heading, { textTransform: 'capitalize' }]}>{formatDate(date, 'EEEE')}</Text>
           <Text style={styles.muted}>{formatDate(date, "MMMM 'de' yyyy")}</Text>
         </View>
         <Text style={styles.muted}>{items.length} {items.length === 1 ? 'turno' : 'turnos'}</Text>
       </View>
-    </View>} ListEmptyComponent={<Empty icon={Clock} title="Sin turnos" detail="No hay turnos programados para este día. Agendá el primer turno desde el botón de abajo." action={{ title: 'Agendar turno', onPress: book }} />} renderItem={({ item, index }) => {
+    </View>} ListEmptyComponent={<Empty icon={Clock} title="Sin turnos" detail="No hay turnos programados para este día. Agendá el primer turno desde el botón de abajo." action={{ title: 'Agendar turno', onPress: book }} />} renderItem={({ item }) => {
       const client = clients.find(c => c.id === item.clientId)
-      return <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View style={{ width: 12, alignSelf: 'stretch', justifyContent: 'center' }}>{index > 0 && <View style={{ position: 'absolute', top: -8, bottom: '50%', left: 5, width: 1, backgroundColor: '#D5C59A' }} />}{index < items.length - 1 && <View style={{ position: 'absolute', top: '50%', bottom: -8, left: 5, width: 1, backgroundColor: '#D5C59A' }} />}<View style={{ width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: colors.primary, backgroundColor: nextId === item.id ? colors.primary : colors.bg }} /></View>
-        <Text style={{ color: colors.primary, fontFamily: fonts.extra, fontSize: 14 }}>{item.time}</Text>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.edge, padding: 10, borderRadius: 12 }}>
-          <Pressable accessibilityRole="button" accessibilityLabel={(nextId === item.id ? 'Próximo turno. ' : '') + 'Editar turno de ' + (client ? getClientFullName(client) : 'paciente')} onPress={() => navigation.navigate('AppointmentForm', { appointmentId: item.id, fromAgenda: true })} style={{ flex: 1, gap: 5, minHeight: 48, justifyContent: 'center' }}>{nextId === item.id && <Text style={[styles.label, { color: colors.primary }]}>Próximo turno</Text>}<Text style={{ fontFamily: fonts.bold, fontSize: 14, color: colors.text }}>{client ? getClientFullName(client) : 'Paciente'}</Text><Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.muted }}>{item.procedure}</Text><Text style={styles.muted}>{appointmentAttribution(item)}</Text>{!(item.status === 'scheduled' && new Date(item.date + 'T' + item.time).getTime() < now) && <Text style={{ fontFamily: fonts.bold, fontSize: 11, color: colors.primary }}>{STATUS_LABELS[item.status]}</Text>}</Pressable>
+      return <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.edge }}>
+          <Pressable accessibilityRole="button" accessibilityLabel={'Editar turno de ' + (client ? getClientFullName(client) : 'paciente')} onPress={() => navigation.navigate('AppointmentForm', { appointmentId: item.id, fromAgenda: true })} style={({ pressed }) => ({ flex: 1, minWidth: 0, gap: 2, minHeight: 48, justifyContent: 'center', backgroundColor: pressed ? colors.soft : 'transparent' })}>
+            <Text style={{ fontFamily: fonts.semibold, fontSize: 16, lineHeight: 22, color: colors.text }}>{client ? getClientFullName(client) : 'Paciente'}<Text style={{ fontFamily: fonts.regular, color: colors.muted }}> · {item.time}</Text></Text>
+            <Text style={styles.muted}>{item.procedure || 'Consulta'}</Text>
+            <Text style={styles.muted}>{appointmentAttribution(item)}</Text>
+          </Pressable>
           <IconButton icon={Trash2} label="Eliminar turno" color={colors.muted} onPress={() => confirmDelete('Se eliminará este turno de la agenda.', () => deleteAppointment(item.id))} />
-        </View>
       </View>
     }} />
     </View>
@@ -97,7 +95,6 @@ export function AppointmentFormScreen({ route, navigation }: ScreenProps<'Appoin
   const [saving, setSaving] = useState(false)
   const savingRef = useRef(false)
   const client = store.clients.find(c => c.id === clientId)
-  const activeTab = route.params?.fromProfile ? 'Perfil' : route.params?.fromAgenda ? 'Agenda' : 'Pacientes'
   const day = formatDate(date, 'yyyy-MM-dd')
   const occupied = new Set(store.appointments.filter(a => a.id !== existing?.id && a.date === day && a.status !== 'cancelled').map(a => a.time))
   const selectedTime = status !== 'cancelled' && occupied.has(time) ? '' : time
@@ -107,8 +104,8 @@ export function AppointmentFormScreen({ route, navigation }: ScreenProps<'Appoin
   const appointmentDates = new Set(store.appointments.map(a => a.date))
   const finish = () => { if (route.params?.fromAgenda) navigation.popTo('Home', { screen: 'Agenda', params: { date: day } }); else navigation.goBack() }
 
-  if (route.params?.appointmentId && !existing) return <Page activeTab={activeTab}><Empty title="Turno no encontrado" detail="Volvé a la agenda." /></Page>
-  if (!client) return <Page activeTab={activeTab}><Empty title="Paciente no encontrado" detail="El paciente no existe" /></Page>
+  if (route.params?.appointmentId && !existing) return <Page><Empty title="Turno no encontrado" detail="Volvé a la agenda." /></Page>
+  if (!client) return <Page><Empty title="Paciente no encontrado" detail="El paciente no existe" /></Page>
 
   const save = () => {
     if (savingRef.current) return
@@ -131,7 +128,7 @@ export function AppointmentFormScreen({ route, navigation }: ScreenProps<'Appoin
     })
     if (!saved) { savingRef.current = false; setSaving(false) }
   }
-  return <Page activeTab={activeTab}>
+  return <Page>
     <View style={styles.card}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Avatar {...client} />
@@ -155,8 +152,7 @@ export function AppointmentFormScreen({ route, navigation }: ScreenProps<'Appoin
         <SelectField label="Motivo de consulta" maxOptionsHeight={216} value={procedure} onChange={value => { setProcedure(value); setErrors({}) }} placeholder="Elegir motivo de consulta" options={PROCEDURES.map(p => ({ label: p, value: p }))} />
         {errors.procedure && <Text accessibilityRole="alert" style={{ color: colors.danger, fontSize: 12 }}>{errors.procedure}</Text>}
       </View>
-      {existing && <Text style={styles.muted}>{appointmentAttribution(existing)}</Text>}
-      <SelectField label="Atendida por" value={attendedBy ?? ''} options={attendingOptions} onChange={value => setAttendedBy(parseProfile(value))} />
+      <SelectField label="Atiende:" value={attendedBy ?? ''} options={attendingOptions} onChange={value => setAttendedBy(parseProfile(value))} />
       <Field label="Notas" value={notes} onChangeText={setNotes} placeholder="Notas adicionales..." multiline />
     </View>
     <Button title={saving ? (existing ? 'Guardando...' : 'Agendando...') : existing ? 'Guardar cambios' : 'Agendar turno'} onPress={save} disabled={saving || !selectedTime} />

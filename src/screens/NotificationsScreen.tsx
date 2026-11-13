@@ -79,15 +79,11 @@ export function NotificationsScreen() {
                 <div className="flex flex-col gap-2" aria-label={section.title}>
                   {section.items.map(notification => {
                     const display = notificationDisplay(notification)
-                    const Icon = notification.type === 'nextTreatment' ? Stethoscope : section.icon
                     return <Card key={notification.id} onClick={() => navigate(`/clients/${notification.clientId}`)} className="notification-card" padding={false}>
-                      <div className="flex items-center gap-3">
-                        <Icon size={20} color={display.color} className="shrink-0" aria-hidden="true" />
                         <div className="min-w-0">
                           <p className="font-extrabold leading-tight text-text-primary break-words">{display.title}</p>
                           <p className="text-sm text-text-secondary break-words">{display.description}</p>
                         </div>
-                      </div>
                     </Card>
                   })}
                 </div>

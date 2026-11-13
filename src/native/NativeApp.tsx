@@ -1,7 +1,7 @@
 import { Component } from 'react'
 import type { PropsWithChildren } from 'react'
 import { ActivityIndicator, StatusBar, Text, View } from 'react-native'
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native'
+import { NavigationContainer, DefaultTheme, useNavigationState } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
@@ -25,10 +25,11 @@ const Stack = createNativeStackNavigator<RootStack>()
 const Tab = createBottomTabNavigator<MainTabs>()
 const theme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, primary: colors.primary, background: colors.bg, card: colors.surface, text: colors.text, border: colors.border } }
 function Tabs() {
+  const homeActive = useNavigationState(state => state.routes[state.index].name === 'Home')
   const count = useStore(s => s.clients.length)
   const appointments = useStore(s => s.appointments)
   const todayCount = appointments.filter(a => a.date === formatDate(new Date(), 'yyyy-MM-dd')).length
-  return <Tab.Navigator tabBar={({ state, navigation }) => <BottomNav active={state.routes[state.index].name} onSelect={name => navigation.navigate(name)} />} screenOptions={{ animation: 'none', header: ({ options }) => <AppHeader title={options.title || ''} subtitle={options.title === 'Pacientes' ? count + ' total' : undefined} right={options.title === 'Agenda' && todayCount > 0 ? <Text style={{ backgroundColor: colors.primary, color: 'white', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4, fontSize: 12, fontFamily: fonts.bold }}>{todayCount}</Text> : undefined} /> }}>
+  return <Tab.Navigator tabBar={({ state, navigation }) => <BottomNav visible={homeActive} active={state.routes[state.index].name} onSelect={name => navigation.navigate(name)} />} screenOptions={{ animation: 'none', header: ({ options }) => <AppHeader title={options.title || ''} subtitle={options.title === 'Pacientes' ? count + ' total' : undefined} right={options.title === 'Agenda' && todayCount > 0 ? <Text style={{ backgroundColor: colors.primary, color: 'white', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4, fontSize: 12, fontFamily: fonts.bold }}>{todayCount}</Text> : undefined} /> }}>
     <Tab.Screen name="Agenda" component={ScheduleScreen} options={{ title: 'Agenda' }} />
     <Tab.Screen name="Pacientes" component={PatientsScreen} options={{ title: 'Pacientes' }} />
     <Tab.Screen name="Recordatorios" component={NotificationsScreen} options={{ title: 'Notificaciones', headerShown: false }} />
@@ -51,7 +52,7 @@ export default function NativeApp() {
       <Stack.Screen name="ClientForm" component={PatientFormScreen} options={{ title: 'Paciente' }} />
       <Stack.Screen name="SelectPatient" component={SelectPatientScreen} options={{ headerShown: false, presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }} />
       <Stack.Screen name="AppointmentForm" component={AppointmentFormScreen} options={{ title: 'Turno' }} />
-      <Stack.Screen name="PhotoForm" component={PhotoFormScreen} options={{ title: 'Nueva foto' }} />
+      <Stack.Screen name="PhotoForm" component={PhotoFormScreen} options={{ title: 'Agregar fotos' }} />
     </Stack.Navigator>
     <WelcomeOverlay />
   </NavigationContainer>}</ErrorBoundary></SafeAreaProvider>

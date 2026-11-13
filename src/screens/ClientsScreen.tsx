@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Users } from 'lucide-react'
+import { ChevronRight, Search, Users } from 'lucide-react'
 import { useStore } from '../store'
-import { getClientFullName } from '../utils'
+import { getClientFullName, hapticFeedback } from '../utils'
 import { Header } from '../components/Header'
 import { Card } from '../components/Card'
 import { Avatar } from '../components/Avatar'
@@ -83,8 +83,7 @@ export function ClientsScreen() {
       />
 
       <main
-        className="flex-1"
-        style={{ width: '100%', maxWidth: 'var(--content-width)', marginInline: 'auto', padding: '1.25rem 1rem 0' }}
+        className="app-content flex-1"
       >
         <div className="client-search surface" style={{ width: '100%', marginBottom: '1.25rem' }}>
           <Search size={22} aria-hidden="true" />
@@ -138,18 +137,20 @@ export function ClientsScreen() {
               {groups.map((group) => (
                 <section key={group.letter} aria-labelledby={'client-letter-' + group.letter}>
                   <h2 id={'client-letter-' + group.letter} tabIndex={-1} className="client-letter-heading text-sm font-semibold text-text-secondary mb-2">{group.letter}</h2>
-                  <div className="app-list">
+                  <div className="patient-rows flat-controls">
             {group.clients.map((client) => (
-              <Card
+              <button
+                type="button"
                 key={client.id}
-                onClick={() => navigate(`/clients/${client.id}`)}
-
+                onClick={() => { hapticFeedback(); navigate(`/clients/${client.id}`) }}
+                className="patient-row"
               >
                 <div className="flex items-center gap-3">
                   <Avatar
                     firstName={client.firstName}
                     lastName={client.lastName}
                     id={client.id}
+                    size="sm"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-base font-semibold text-text-primary break-words">
@@ -162,8 +163,9 @@ export function ClientsScreen() {
                       <p className="text-sm text-text-secondary break-words">{client.email}</p>
                     )}
                   </div>
+                  <ChevronRight size={18} aria-hidden="true" className="shrink-0 text-text-secondary" />
                 </div>
-              </Card>
+              </button>
             ))}
                   </div>
                 </section>

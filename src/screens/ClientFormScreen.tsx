@@ -94,7 +94,7 @@ export function ClientFormScreen({ toast }: { toast: (args: { type: 'success' | 
 
       <div className="form-center app-content w-full">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Card className="animate-slide-up stagger-1 opacity-0">
+          <Card>
             <div className="space-y-4">
               <div>
                 <label htmlFor="firstName" className="fluid-xs font-medium text-text-secondary mb-1.5 block">Nombre *</label>
@@ -135,7 +135,7 @@ export function ClientFormScreen({ toast }: { toast: (args: { type: 'success' | 
             </div>
           </Card>
 
-          <Card className="animate-slide-up stagger-2 opacity-0">
+          <Card>
             <div className="space-y-4">
               <div>
                 <label htmlFor="dateOfBirth" className="fluid-xs font-medium text-text-secondary mb-1.5 block">Fecha de nacimiento</label>
@@ -177,7 +177,7 @@ export function ClientFormScreen({ toast }: { toast: (args: { type: 'success' | 
             </div>
           </Card>
 
-          <Card className="animate-slide-up stagger-3 opacity-0">
+          <Card>
             <div>
               <label htmlFor="notes" className="fluid-xs font-medium text-text-secondary mb-1.5 block">Historia Clínica</label>
               <textarea
@@ -194,7 +194,7 @@ export function ClientFormScreen({ toast }: { toast: (args: { type: 'success' | 
           <button
             type="submit"
             disabled={submitted}
-            className="w-full bg-primary text-white rounded-xl fluid-sm font-semibold press-scale transition-all disabled:opacity-50 animate-slide-up stagger-4 opacity-0"
+            className="w-full bg-primary text-white rounded-xl fluid-sm font-semibold press-scale transition-all disabled:opacity-50"
             style={{ height: 'var(--btn-h)' }}
           >
             {submitted ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear paciente'}

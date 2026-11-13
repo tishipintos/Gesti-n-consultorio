@@ -10,9 +10,9 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div role="status" className="flex flex-col items-center justify-center pt-10 pb-16 px-6 text-center animate-fade-in">
-      <div className="w-20 h-20 rounded-[1.6rem] bg-primary/10 text-primary flex items-center justify-center mb-4" aria-hidden="true">{icon}</div>
-      <h3 className="text-lg font-bold text-text-primary mb-2 tracking-tight">{title}</h3>
+    <div role="status" className="empty-state flex flex-col items-center justify-center text-center">
+      <div className="empty-state-icon text-primary flex items-center justify-center mb-4" aria-hidden="true">{icon}</div>
+      <h3 className="text-lg font-semibold text-text-primary mb-2 tracking-tight">{title}</h3>
       <p className="text-sm leading-relaxed text-text-secondary mb-5 max-w-xs">{description}</p>
       {action && (
         <button

@@ -67,7 +67,7 @@ export function ClientDetailScreen({ toast }: { toast: (args: { type: 'success' 
   return (
     <div className="app-page client-detail bg-bg">
       <Header
-        title={getClientFullName(client)}
+        title="Ficha del paciente"
         showBack
         rightAction={
           <div className="flex items-center gap-1">
@@ -88,7 +88,7 @@ export function ClientDetailScreen({ toast }: { toast: (args: { type: 'success' 
       />
 
       <main className="app-content app-stack">
-        <Card className="animate-scale-in">
+        <section className="patient-identity">
           <div className="flex items-center gap-4">
             <Avatar
               firstName={client.firstName}
@@ -115,17 +115,17 @@ export function ClientDetailScreen({ toast }: { toast: (args: { type: 'success' 
               )}
             </div>
           </div>
-        </Card>
+        </section>
           {client.notes && (
-          <Card className="animate-slide-up stagger-6 opacity-0">
+          <section className="patient-history">
             <div className="flex items-center gap-2 mb-2">
               <p className="fluid-sm font-semibold text-text-secondary">Historia Clínica</p>
             </div>
             <p className="fluid-sm text-text-primary whitespace-pre-wrap">{client.notes}</p>
-          </Card>
+          </section>
         )}
         <div className="grid grid-cols-2 gap-3">
-          {quickActions.map((action, i) => (
+          {quickActions.map((action) => (
             <button
               key={action.label}
               onClick={() => {
@@ -133,7 +133,7 @@ export function ClientDetailScreen({ toast }: { toast: (args: { type: 'success' 
                 action.onClick()
               }}
               aria-label={action.label}
-              className={`client-quick-action surface flex flex-col items-center gap-2.5 py-5 rounded-2xl press-scale transition-all animate-slide-up stagger-${i + 1} opacity-0`}
+              className="client-quick-action surface flex items-center gap-2.5 press-scale"
             >
               <div className={`p-3 ${action.color}`}>
                 <action.icon size={28} />
@@ -150,7 +150,7 @@ export function ClientDetailScreen({ toast }: { toast: (args: { type: 'success' 
         />
 
         {appointments.length > 0 && (
-          <div className="animate-slide-up stagger-5 opacity-0">
+          <div>
             <div className="flat-controls flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-3">
               <h3 className="fluid-sm font-semibold text-text-secondary">Últimos turnos</h3>
               {appointments.length > 2 && (

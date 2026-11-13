@@ -9,14 +9,10 @@ import { colors, styles } from './theme'
 import { formatDate } from '../utils'
 import { Clock, ChevronDown } from 'lucide-react-native'
 import type { LucideIcon } from 'lucide-react-native'
-import type { MainTabs } from './navigation'
-import { BottomNav } from './chrome'
-import { useKeyboardVisible } from './useKeyboardVisible'
 
-export function Page({ children, activeTab = 'Pacientes' }: PropsWithChildren<{ activeTab?: keyof MainTabs }>) {
+export function Page({ children }: PropsWithChildren) {
   const { frame } = usePageGeometry()
   const insets = useSafeAreaInsets()
-  const keyboardOpen = useKeyboardVisible()
   return <View style={styles.page}>
     <ScrollView
       style={{ flex: 1 }}
@@ -25,9 +21,8 @@ export function Page({ children, activeTab = 'Pacientes' }: PropsWithChildren<{ 
       automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
       automaticallyAdjustContentInsets={false}
       contentInsetAdjustmentBehavior="never"
-      contentContainerStyle={[styles.content, { ...frame, paddingBottom: keyboardOpen ? 24 : 124 + insets.bottom }]}
+      contentContainerStyle={[styles.content, { ...frame, paddingBottom: 24 + insets.bottom }]}
     >{children}</ScrollView>
-    <BottomNav active={activeTab} />
   </View>
 }
 export function Button({ title, onPress, secondary, danger, disabled }: { title: string; onPress: () => void; secondary?: boolean; danger?: boolean; disabled?: boolean }) {
@@ -48,7 +43,7 @@ export function DateField({ label, value, onChange, mode = 'date', maximumDate }
 }
 export function Empty({ title, detail, icon: Icon = Clock, action }: { title: string; detail: string; icon?: LucideIcon; action?: { title: string; onPress: () => void } }) {
   return <View style={{ paddingTop: 40, paddingBottom: 64, paddingHorizontal: 24, alignItems: 'center', gap: 12 }}>
-    <View style={{ width: 72, height: 72, backgroundColor: colors.soft, borderRadius: 26, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}><Icon size={36} color={colors.primary} strokeWidth={1.5} /></View>
+    <View style={{ width: 48, height: 48, backgroundColor: colors.soft, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}><Icon size={24} color={colors.primary} strokeWidth={1.5} /></View>
     <Text style={[styles.heading, { textAlign: 'center' }]}>{title}</Text><Text style={[styles.muted, { textAlign: 'center', maxWidth: 320, marginBottom: 12 }]}>{detail}</Text>
     {action && <Button title={action.title} onPress={action.onPress} />}
   </View>
@@ -56,7 +51,7 @@ export function Empty({ title, detail, icon: Icon = Clock, action }: { title: st
 
 export function SelectField({ label, value, options, onChange, maxOptionsHeight, placeholder = 'Seleccioná una opción' }: { label: string; value: string; options: readonly { value: string; label: string; disabled?: boolean }[]; onChange: (value: string) => void; maxOptionsHeight?: number; placeholder?: string }) {
   const [open, setOpen] = useState(false)
-  return <View style={{ gap: 8 }}><Text style={styles.label}>{label}</Text><Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ expanded: open }} onPress={() => setOpen(!open)} style={[styles.input, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}><Text style={[styles.text, { flex: 1 }]}>{options.find(o => o.value === value)?.label || placeholder}</Text><ChevronDown size={20} color={colors.muted} /></Pressable>
+  return <View style={{ gap: 8 }}><Text style={styles.label}>{label}</Text><Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityValue={{ text: options.find(o => o.value === value)?.label || placeholder }} accessibilityState={{ expanded: open }} onPress={() => setOpen(!open)} style={[styles.input, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }]}><Text style={[styles.text, { flex: 1 }]}>{options.find(o => o.value === value)?.label || placeholder}</Text><ChevronDown size={20} color={colors.muted} /></Pressable>
     {open && <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" style={{ maxHeight: maxOptionsHeight, backgroundColor: colors.surface, borderRadius: 12 }} contentContainerStyle={{ padding: 4 }} >{options.map(option => <Pressable accessibilityRole="radio" accessibilityState={{ checked: value === option.value, disabled: !!option.disabled }} disabled={option.disabled} key={option.value} onPress={() => { onChange(option.value); setOpen(false) }} style={({ pressed }) => ({ padding: 12, minHeight: 48, backgroundColor: value === option.value ? colors.soft : colors.surface, borderRadius: 8, opacity: option.disabled ? 0.4 : pressed ? 0.7 : 1 })}><Text style={styles.text}>{option.label}</Text></Pressable>)}</ScrollView>}
   </View>
 }

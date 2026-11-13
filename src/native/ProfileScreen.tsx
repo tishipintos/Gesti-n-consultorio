@@ -18,19 +18,19 @@ export function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStack>>()
   const { frame } = usePageGeometry()
   return <ScrollView style={styles.page} contentContainerStyle={[styles.content, { ...frame }]}>
-    <View style={[styles.card, { backgroundColor: colors.soft }]}>
+    <View style={{ gap: 20, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: colors.border }}>
       <Text accessibilityRole="header" style={styles.title}>{profileName(activeProfile)}</Text>
       <Choices label="Cambiar perfil" value={activeProfile} options={profileOptions} onChange={profile => attempt(() => setActiveProfile(profile))} />
     </View>
-    {Object.entries(profileSections).map(([key, section]) => <Pressable
+    <View>{Object.entries(profileSections).map(([key, section]) => <Pressable
       key={key}
       accessibilityRole="button"
       onPress={() => navigation.navigate('ProfileSection', { section: key as keyof typeof profileSections })}
-      style={({ pressed }) => [styles.card, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48, opacity: pressed ? 0.7 : 1 }]}
+      style={({ pressed }) => [styles.listRow, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, backgroundColor: pressed ? colors.soft : 'transparent' }]}
     >
-      <Text style={[styles.text, { flex: 1, fontFamily: fonts.bold }]}>{section.title}</Text>
-      <ChevronRight size={20} color={colors.primary} />
-    </Pressable>)}
+      <Text style={[styles.text, { flex: 1, fontFamily: fonts.medium }]}>{section.title}</Text>
+      <ChevronRight size={18} color={colors.muted} />
+    </Pressable>)}</View>
   </ScrollView>
 }
 
@@ -39,22 +39,22 @@ export function ProfileSectionScreen({ route, navigation }: ScreenProps<'Profile
   const lists = useProfile()
   const { empty } = profileSections[section]
 
-  return <Page activeTab="Perfil">
+  return <Page>
     {!lists[section].length && <Text style={styles.muted}>{empty}</Text>}
-    {section === 'followUps'
-      ? lists.followUps.map(item => <Pressable key={item.id} accessibilityRole="button" style={styles.card} onPress={() => navigation.navigate('Client', { id: item.clientId })}>
-        <Text style={[styles.text, { fontFamily: fonts.bold }]}>{item.clientName}</Text>
+    <View>{section === 'followUps'
+      ? lists.followUps.map(item => <Pressable key={item.id} accessibilityRole="button" style={({ pressed }) => [styles.listRow, { backgroundColor: pressed ? colors.soft : 'transparent' }]} onPress={() => navigation.navigate('Client', { id: item.clientId })}>
+        <Text style={[styles.text, { fontFamily: fonts.semibold }]}>{item.clientName}</Text>
         <Text style={styles.text}>{item.title}</Text>
         <Text style={styles.muted}>{formatDate(item.date)}</Text>
       </Pressable>)
       : lists[section].map(item => {
         const client = lists.clients.find(c => c.id === item.clientId)
         if (!client) return null
-        return <Pressable key={item.id} accessibilityRole="button" style={styles.card} onPress={() => navigation.navigate('AppointmentForm', { appointmentId: item.id, fromProfile: true })}>
-          <Text style={[styles.text, { fontFamily: fonts.bold }]}>{getClientFullName(client)}</Text>
+        return <Pressable key={item.id} accessibilityRole="button" style={({ pressed }) => [styles.listRow, { backgroundColor: pressed ? colors.soft : 'transparent' }]} onPress={() => navigation.navigate('AppointmentForm', { appointmentId: item.id, fromProfile: true })}>
+          <Text style={[styles.text, { fontFamily: fonts.semibold }]}>{getClientFullName(client)}</Text>
           <Text style={styles.text}>{formatDate(item.date)} · {item.time} · {item.procedure || 'Consulta'}</Text>
           <Text style={styles.muted}>{appointmentAttribution(item)}</Text>
         </Pressable>
-      })}
+      })}</View>
   </Page>
 }

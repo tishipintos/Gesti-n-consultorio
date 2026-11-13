@@ -27,20 +27,20 @@ export function WelcomeOverlay({ onComplete }: { onComplete: () => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
       <div className="absolute inset-0 bg-black/50 animate-fade-in" onClick={handleDismiss} />
-      <div className="relative w-full max-w-sm bg-card rounded-3xl p-8 shadow-2xl animate-scale-in">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+      <div className="welcome-panel relative w-full max-w-sm bg-card rounded-2xl p-6 shadow-2xl animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+        <div className="mb-6">
+          <div className="text-primary mb-4">
             <Calendar size={32} className="text-primary" />
           </div>
-          <h2 className="text-xl font-bold text-text-primary mb-2">Bienvenido a Gestión Consultorio</h2>
+          <h2 id="welcome-title" className="text-2xl font-semibold text-text-primary mb-3 tracking-tight">Bienvenido a Gestión Consultorio</h2>
           <p className="text-sm text-text-secondary leading-relaxed">
             Administrá los turnos, pacientes y fotos de tu consultorio en un solo lugar.
           </p>
         </div>
 
-        <div className="space-y-3 mb-6">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5">
-            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div className="welcome-features mb-6">
+          <div className="flex items-center gap-4 py-3">
+            <div className="text-primary flex-shrink-0">
               <Calendar size={18} className="text-primary" />
             </div>
             <div>
@@ -48,8 +48,8 @@ export function WelcomeOverlay({ onComplete }: { onComplete: () => void }) {
               <p className="text-xs text-text-secondary">Visualizá y agendá turnos</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5">
-            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center gap-4 py-3">
+            <div className="text-primary flex-shrink-0">
               <Users size={18} className="text-primary" />
             </div>
             <div>
@@ -57,8 +57,8 @@ export function WelcomeOverlay({ onComplete }: { onComplete: () => void }) {
               <p className="text-xs text-text-secondary">Cargá datos y fotos</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5">
-            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center gap-4 py-3">
+            <div className="text-primary flex-shrink-0">
               <Bell size={18} className="text-primary" />
             </div>
             <div>

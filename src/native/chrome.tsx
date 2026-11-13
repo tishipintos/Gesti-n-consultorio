@@ -6,9 +6,8 @@ import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'ex
 import { Bell, Calendar, ChevronLeft, Plus, Users, UserRound } from 'lucide-react-native'
 import type { LucideIcon } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useNavigation } from '@react-navigation/native'
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import type { MainTabs, RootStack } from './navigation'
+import { useIsFocused } from '@react-navigation/native'
+import type { MainTabs } from './navigation'
 import { colors, fonts, shadow } from './theme'
 import { useNotifications } from '../hooks/useNotifications'
 import { notificationKey, useNotificationReadState } from '../store/notificationReadState'
@@ -17,15 +16,15 @@ import { useKeyboardVisible } from './useKeyboardVisible'
 
 const tabs = [{ name: 'Agenda', label: 'Calendario', icon: Calendar }, { name: 'Pacientes', label: 'Pacientes', icon: Users }, { name: 'Recordatorios', label: 'Avisos', icon: Bell }, { name: 'Perfil', label: 'Perfil', icon: UserRound }] as const
 export function IconButton({ icon: Icon, label, onPress, color = colors.primary }: { icon: LucideIcon; label: string; onPress: () => void; color?: string }) {
-  return <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => ({ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.5 : 1 })}><Icon size={22} color={color} strokeWidth={2} /></Pressable>
+  return <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => ({ width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: pressed ? colors.tint : 'transparent' })}><Icon size={22} color={color} strokeWidth={1.75} /></Pressable>
 }
 export function AppHeader({ title, subtitle, back, right }: { title: string; subtitle?: string; back?: () => void; right?: ReactNode }) {
   const insets = useSafeAreaInsets()
   const { frame } = usePageGeometry(title === 'Agenda' ? 'agenda' : title === 'Notificaciones' ? 'notices' : 'reading')
-  return <View style={{ paddingTop: insets.top, backgroundColor: colors.bg, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E8E2D6' }}><View style={{ minHeight: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, ...frame }}>
-    <View style={{ minWidth: 44 }}>{back && <IconButton icon={ChevronLeft} label="Volver" onPress={back} />}</View>
-    <View style={{ flex: 1, alignItems: 'center', paddingVertical: 8 }}><Text accessibilityRole="header" numberOfLines={2} style={{ fontFamily: fonts.extra, fontSize: 18, color: colors.text, textAlign: 'center' }}>{title}</Text>{subtitle && <Text style={{ fontFamily: fonts.regular, color: colors.muted, fontSize: 12 }}>{subtitle}</Text>}</View>
-    <View style={{ minWidth: 44, alignItems: 'flex-end' }}>{right}</View>
+  return <View style={{ paddingTop: insets.top, backgroundColor: colors.bg, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.edge }}><View style={{ minHeight: back ? 56 : 88, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, ...frame }}>
+    {back && <View style={{ marginLeft: -12 }}><IconButton icon={ChevronLeft} label="Volver" onPress={back} /></View>}
+    <View style={{ flex: 1, paddingVertical: back ? 8 : 16, gap: 4 }}><Text accessibilityRole="header" numberOfLines={2} style={{ fontFamily: fonts.semibold, fontSize: back ? 18 : 28, letterSpacing: back ? -0.3 : -0.7, color: colors.text }}>{title}</Text>{subtitle && <Text style={{ fontFamily: fonts.regular, color: colors.muted, fontSize: 13 }}>{subtitle}</Text>}</View>
+    {right && <View style={{ alignItems: 'flex-end' }}>{right}</View>}
   </View></View>
 }
 const supportsGlass = Platform.OS === 'ios' && isGlassEffectAPIAvailable() && isLiquidGlassAvailable()
@@ -50,19 +49,18 @@ function useNavGlass() {
   return supportsGlass && !reduceTransparency
 }
 
-export function BottomNav({ active, onSelect }: { active: string; onSelect?: (name: keyof MainTabs) => void }) {
+export function BottomNav({ active, onSelect, visible = true }: { active: string; onSelect: (name: keyof MainTabs) => void; visible?: boolean }) {
   const insets = useSafeAreaInsets()
-  const navigation = useNavigation<NativeStackNavigationProp<RootStack>>()
   const seen = useNotificationReadState(s => s.seen)
   const notifications = useNotifications()
   const unread = notifications.some(n => !seen.includes(notificationKey(n)))
   const keyboardOpen = useKeyboardVisible()
   const useGlass = useNavGlass()
-  if (keyboardOpen) return null
-  return <View pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(insets.bottom, 12), left: insets.left + 12, right: insets.right + 12, alignItems: 'center' }}>
+  const hidden = keyboardOpen || !visible
+  return <View pointerEvents={hidden ? 'none' : 'box-none'} accessibilityElementsHidden={hidden} importantForAccessibility={hidden ? 'no-hide-descendants' : 'auto'} style={{ opacity: hidden ? 0 : 1, position: 'absolute', bottom: Math.max(insets.bottom, 12), left: insets.left + 12, right: insets.right + 12, alignItems: 'center' }}>
     <View accessibilityRole="tablist" style={[navStyles.capsule, !useGlass && navStyles.opaque]}>
       {useGlass && <GlassView pointerEvents="none" accessible={false} glassEffectStyle="regular" tintColor="#FFF4DEAA" style={navStyles.glass} />}
-      {tabs.map(({ name, label, icon: Icon }) => <Pressable key={name} accessibilityRole="tab" accessibilityLabel={name === 'Recordatorios' ? (unread ? 'Avisos de notificaciones sin abrir' : 'Avisos de notificaciones') : label} accessibilityState={{ selected: active === name }} onPress={() => onSelect ? onSelect(name) : navigation.popTo('Home', { screen: name })} style={({ pressed }) => [navStyles.tab, active === name && navStyles.activeTab, pressed && navStyles.pressedTab]}>
+      {tabs.map(({ name, label, icon: Icon }) => <Pressable key={name} accessibilityRole="tab" accessibilityLabel={name === 'Recordatorios' ? (unread ? 'Avisos de notificaciones sin abrir' : 'Avisos de notificaciones') : label} accessibilityState={{ selected: active === name }} onPress={() => onSelect(name)} style={({ pressed }) => [navStyles.tab, active === name && navStyles.activeTab, pressed && navStyles.pressedTab]}>
         <View><Icon size={24} strokeWidth={active === name ? 2.2 : 1.5} color={active === name ? colors.primary : colors.muted} />{name === 'Recordatorios' && unread && <View style={{ position: 'absolute', right: -3, top: -1, width: 10, height: 10, borderRadius: 5, borderWidth: 1, borderColor: colors.surface, backgroundColor: colors.danger }} />}</View>
         <Text style={{ fontFamily: fonts.semibold, fontSize: 11, textAlign: 'center', color: active === name ? colors.primary : colors.muted }}>{label}</Text>
       </Pressable>)}
@@ -97,19 +95,18 @@ const navStyles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
   },
-  activeTab: { backgroundColor: '#F1E4C4', borderColor: '#E2D3AD' },
+  activeTab: { backgroundColor: '#F1E4C4', borderColor: 'transparent' },
   pressedTab: { backgroundColor: '#E8DBB8' },
 })
 
 export function FAB({ label, onPress, agenda }: { label: string; onPress: () => void; agenda?: boolean }) {
+  const focused = useIsFocused()
   const insets = useSafeAreaInsets()
   const { rightGutter } = usePageGeometry(agenda ? 'agenda' : 'reading')
   const keyboardOpen = useKeyboardVisible()
-  if (keyboardOpen) return null
-  return <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => ({ ...(agenda ? { alignSelf: 'flex-end' as const, marginRight: rightGutter, marginBottom: Math.max(insets.bottom, 12) + 80, marginTop: 4 } : { position: 'absolute' as const, bottom: Math.max(insets.bottom, 12) + 92, right: rightGutter }), backgroundColor: colors.primary, borderRadius: 16, paddingHorizontal: 24, minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, ...shadow, shadowOpacity: 0.18, opacity: pressed ? 0.7 : 1 })}>{agenda ? <AppointmentIcon /> : <Plus color="white" size={24} strokeWidth={2} />}<Text style={{ color: 'white', fontSize: 14, fontFamily: fonts.semibold }}>{label}</Text></Pressable>
+  if (keyboardOpen || !focused) return null
+  return <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => ({ position: 'absolute', bottom: Math.max(insets.bottom, 12) + 100, right: rightGutter, backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 20, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8, ...shadow, opacity: pressed ? 0.7 : 1 })}>{agenda ? <AppointmentIcon size={20} /> : <Plus color="white" size={20} strokeWidth={1.75} />}<Text style={{ color: 'white', fontSize: 14, fontFamily: fonts.semibold }}>{label}</Text></Pressable>
 }
-export function Avatar({ firstName, lastName, id, size = 48 }: { firstName: string; lastName: string; id: string; size?: number }) {
-  const palette = [colors.primary, '#92682F', colors.primary, colors.success, '#966010', colors.danger]
-  const color = palette[[...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % palette.length]
-  return <View accessibilityLabel={`${firstName} ${lastName}`} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color, borderWidth: 2, borderColor: '#FFFFFFCC', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: 'white', fontFamily: fonts.bold, fontSize: size * 0.29 }}>{firstName[0]}{lastName[0]}</Text></View>
+export function Avatar({ firstName, lastName, size = 48 }: { firstName: string; lastName: string; id: string; size?: number }) {
+  return <View accessibilityLabel={`${firstName} ${lastName}`} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: colors.primary, fontFamily: fonts.semibold, fontSize: size * 0.29 }}>{firstName[0]}{lastName[0]}</Text></View>
 }

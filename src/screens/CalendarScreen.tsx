@@ -12,8 +12,6 @@ import {
   isSameMonthFn,
   formatDate,
   formatTime,
-  STATUS_COLORS,
-  STATUS_LABELS,
   getClientFullName,
   addMonthsToDate,
   hapticFeedback,
@@ -33,30 +31,12 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [bookingOpen, setBookingOpen] = useState(false)
-  const [now, setNow] = useState(() => Date.now())
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 300)
     return () => clearTimeout(timer)
   }, [])
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>
-    const refresh = () => {
-      setNow(Date.now())
-      timer = setTimeout(refresh, 60000 - (Date.now() % 60000))
-    }
-    const onFocus = () => { clearTimeout(timer); refresh() }
-    refresh()
-    window.addEventListener('focus', onFocus)
-    return () => { clearTimeout(timer); window.removeEventListener('focus', onFocus) }
-  }, [])
-
-  const nextAppointmentId = useMemo(() => appointments
-    .filter((appointment) => appointment.status === 'scheduled' && parseISO(appointment.date + 'T' + appointment.time).getTime() >= now)
-    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0]?.id,
-  [appointments, now])
 
   const days = useMemo(() => getMonthDays(currentMonth), [currentMonth])
 
@@ -114,7 +94,7 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
         title="Agenda"
         rightAction={
           todayCount > 0 && (
-            <span className="bg-primary text-white text-xs font-bold px-2.5 py-1 rounded-full animate-scale-in">
+            <span className="bg-primary text-white text-xs font-bold px-2.5 py-1 rounded-full">
               {todayCount}
             </span>
           )
@@ -122,20 +102,14 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
       />
 
       <main className="app-content app-stack agenda-layout">
-        <Card padding={false} className="agenda-month flat-controls">
-          <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-            <button onClick={handlePrevMonth} className="w-11 h-11 -ml-1 rounded-full bg-primary/8 text-primary flex items-center justify-center press-scale" aria-label="Mes anterior">
+        <section className="agenda-month flat-controls" aria-label="Calendario mensual">
+          <div className="agenda-month-toolbar">
+            <span className="agenda-month-title" aria-live="polite">{formatDate(currentMonth, 'MMMM yyyy')}</span>
+            <button onClick={handleToday} className="calendar-today" type="button">Hoy</button>
+            <button onClick={handlePrevMonth} aria-label="Mes anterior">
               <ChevronLeft size={22} className="text-text-secondary" />
             </button>
-            <div className="flex flex-col items-center gap-0.5">
-              <span className="text-base font-extrabold text-text-primary capitalize tracking-[-0.02em]" aria-live="polite">
-                {formatDate(currentMonth, 'MMMM yyyy')}
-              </span>
-              <button onClick={handleToday} className="text-xs min-h-11 px-2 text-primary font-bold press-scale" type="button">
-                Ir a hoy
-              </button>
-            </div>
-            <button onClick={handleNextMonth} className="w-11 h-11 -mr-1 rounded-full bg-primary/8 text-primary flex items-center justify-center press-scale" aria-label="Mes siguiente">
+            <button onClick={handleNextMonth} aria-label="Mes siguiente">
               <ChevronRight size={22} className="text-text-secondary" />
             </button>
           </div>
@@ -194,7 +168,7 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
               )
             })}
           </div>
-        </Card>
+        </section>
 
         <section className="flex-1" aria-labelledby="agenda-heading">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-[#d9cfbb] pb-3 mb-4">
@@ -238,41 +212,21 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
               />
             </div>
           ) : (
-            <div className="space-y-2">
-              {appointmentsForDate.map((appointment, index) => (
-                <article key={appointment.id} className="relative grid grid-cols-[0.75rem_max-content_minmax(0,1fr)] gap-x-2">
-                  <div className="relative" aria-hidden="true">
-                    {index > 0 && <span className="absolute left-1/2 top-0 bottom-1/2 w-px -translate-x-1/2 bg-primary/25" />}
-                    {index < appointmentsForDate.length - 1 && (
-                      <span className="absolute left-1/2 top-1/2 -bottom-2 w-px -translate-x-1/2 bg-primary/25" />
-                    )}
-                    <span className={`absolute top-1/2 -translate-y-1/2 left-0 w-3 h-3 rounded-full border-2 border-primary ${appointment.id === nextAppointmentId ? 'bg-primary' : 'bg-bg'}`} />
-                  </div>
-                  <div className="self-center text-right whitespace-nowrap">
-                    <time dateTime={appointment.date + 'T' + appointment.time} className="block text-sm leading-5 font-extrabold text-primary tabular-nums">
-                      {formatTime(appointment.time)}
-                    </time>
-                  </div>
-                  <div className="rounded-xl border border-[#e8dfcf] bg-card px-3 py-2.5">
+            <div>
+              {appointmentsForDate.map((appointment) => (
+                <article key={appointment.id} className="agenda-appointment">
+                  <div className="agenda-appointment-body">
                     <div className="flat-controls flex items-start gap-3">
                       <div className="flex-1 min-w-0">
-                        {appointment.id === nextAppointmentId && <p className="mb-1 text-xs font-bold text-primary">Próximo turno</p>}
                         {appointment.client && (
                           <p className="fluid-sm font-bold text-text-primary break-words">
                             {getClientFullName(appointment.client)}
+                            {' · '}
+                            <time dateTime={appointment.date + 'T' + appointment.time} className="font-normal text-text-secondary whitespace-nowrap">{formatTime(appointment.time)}</time>
                           </p>
                         )}
-                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                          {appointment.procedure && (
-                            <p className="fluid-xs text-text-secondary break-words">{appointment.procedure}</p>
-                          )}
-                          {!(appointment.status === 'scheduled' && parseISO(appointment.date + 'T' + appointment.time).getTime() < now) && (
-                            <span className={`fluid-xs font-bold px-2 py-0.5 rounded-full ${STATUS_COLORS[appointment.status]}`} aria-label={`Estado: ${STATUS_LABELS[appointment.status]}`}>
-                              {STATUS_LABELS[appointment.status]}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-text-secondary mt-1">{appointmentAttribution(appointment)}</p>
+                        <p className="fluid-xs text-text-secondary break-words">{appointment.procedure || 'Consulta'}</p>
+                        <p className="text-xs text-text-secondary break-words">{appointmentAttribution(appointment)}</p>
                         {appointment.client && <Link className="inline-flex items-center min-h-11 text-sm font-semibold text-primary underline" to={'/clients/' + appointment.clientId + '/appointments/' + appointment.id + '/edit'}>Editar turno</Link>}
                       </div>
                       <button
@@ -280,7 +234,7 @@ export function CalendarScreen({ toast }: { toast: (args: { type: 'success' | 'e
                           hapticFeedback()
                           setConfirmDelete(appointment.id)
                         }}
-                        className="-mt-1 -mr-2 p-2 min-w-11 min-h-11 flex items-center justify-center shrink-0 text-text-secondary hover:text-error transition-colors press-scale rounded-xl"
+                        className="p-2 min-w-11 min-h-11 flex items-center justify-center shrink-0 text-text-secondary hover:text-error transition-colors press-scale rounded-xl"
                         aria-label="Eliminar turno"
                       >
                         <Trash2 size={16} />

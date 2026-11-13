@@ -77,7 +77,7 @@ export function SelectPatientScreen({ route, navigation }: ScreenProps<'SelectPa
             {slots.every(slot => occupied.has(slot)) && <Text style={{ color: colors.danger }}>No quedan horarios libres. Elegí otro día.</Text>}
             <SelectField label="Tratamiento" maxOptionsHeight={216} value={procedure} placeholder="Elegir tratamiento" onChange={value => { setProcedure(value); setError('') }} options={PROCEDURES.map(value => ({ value, label: value }))} />
             <View style={{ gap: 4 }}><Pressable accessibilityRole="button" accessibilityState={{ expanded: showNotes }} onPress={() => setShowNotes(!showNotes)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 }}><Text style={styles.text}>Notas</Text>{showNotes ? <ChevronDown size={18} color={colors.muted} /> : <ChevronRight size={18} color={colors.muted} />}</Pressable>
-              <SelectField label="Atendida por" value={attendedBy ?? ''} options={attendingOptions} onChange={value => setAttendedBy(parseProfile(value))} />
+              <SelectField label="Atiende:" value={attendedBy ?? ''} options={attendingOptions} onChange={value => setAttendedBy(parseProfile(value))} />
               {showNotes && <TextInput accessibilityLabel="Notas del tratamiento" placeholder="Comentario breve sobre el tratamiento" placeholderTextColor={colors.muted} value={notes} onChangeText={setNotes} multiline style={[styles.input, { minHeight: 76, textAlignVertical: 'top' }]} />}
             </View>
             {!!error && <Text accessibilityRole="alert" style={{ color: colors.danger }}>{error}</Text>}

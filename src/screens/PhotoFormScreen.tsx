@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Camera, Image as ImageIcon } from 'lucide-react'
+import { Camera, Image as ImageIcon, X } from 'lucide-react'
 import { useStore } from '../store'
 import { Header } from '../components/Header'
 import { Card } from '../components/Card'
@@ -10,16 +10,19 @@ import { getClientFullName, PHOTO_TYPE_LABELS, hapticFeedback } from '../utils'
 export function PhotoFormScreen({ toast }: { toast: (args: { type: 'success' | 'error' | 'info'; message: string }) => void }) {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const { getClient, addPhoto } = useStore()
+  const { getClient, addPhotos } = useStore()
   const client = getClient(id || '')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const processing = useRef(false)
 
   const [form, setForm] = useState({
     type: 'before' as 'before' | 'after',
     procedure: '',
     notes: '',
   })
-  const [preview, setPreview] = useState<string | null>(null)
+  const [previews, setPreviews] = useState<string[]>([])
+  const [reading, setReading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
   if (!client) {
@@ -33,43 +36,67 @@ export function PhotoFormScreen({ toast }: { toast: (args: { type: 'success' | '
     )
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ type: 'error', message: 'La imagen no puede superar 5MB' })
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    e.target.value = ''
+    if (!files.length || processing.current) return
+    if (files.some(file => file.size > 5 * 1024 * 1024)) {
+      toast({ type: 'error', message: 'Cada imagen debe pesar como máximo 5 MB.' })
       return
     }
-
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      setPreview(ev.target?.result as string)
+    if (files.some(file => file.type && !file.type.startsWith('image/'))) {
+      toast({ type: 'error', message: 'Seleccioná únicamente imágenes.' })
+      return
     }
-    reader.readAsDataURL(file)
+    processing.current = true
+    setReading(true)
+    try {
+      const images = await Promise.all(files.map(file => new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Imagen ilegible'))
+        reader.onerror = () => reject(reader.error)
+        reader.onabort = () => reject(new Error('Lectura cancelada'))
+        reader.readAsDataURL(file)
+      })))
+      setPreviews(current => [...new Set([...current, ...images])])
+    } catch {
+      toast({ type: 'error', message: 'No se pudieron leer las fotos. Intentá seleccionarlas nuevamente.' })
+    } finally {
+      processing.current = false
+      setReading(false)
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (processing.current) return
     hapticFeedback()
 
-    if (!preview) {
-      toast({ type: 'error', message: 'Seleccioná una imagen' })
+    if (!previews.length) {
+      toast({ type: 'error', message: 'Seleccioná al menos una imagen' })
       return
     }
 
+    processing.current = true
     setSubmitted(true)
-
-    addPhoto({
-      clientId: client.id,
-      fileUrl: preview,
-      type: form.type,
-      procedure: form.procedure.trim() || undefined,
-      notes: form.notes.trim() || undefined,
-      takenAt: new Date().toISOString(),
-    })
-
-    toast({ type: 'success', message: 'Foto subida' })
+    try {
+      const takenAt = new Date().toISOString()
+      addPhotos(previews.map(fileUrl => ({
+        clientId: client.id,
+        fileUrl,
+        type: form.type,
+        procedure: form.procedure.trim() || undefined,
+        notes: form.notes.trim() || undefined,
+        takenAt,
+      })))
+    } catch {
+      toast({ type: 'error', message: 'No se pudieron guardar las fotos. Revisá el espacio disponible e intentá nuevamente.' })
+      return
+    } finally {
+      processing.current = false
+      setSubmitted(false)
+    }
+    toast({ type: 'success', message: previews.length === 1 ? 'Foto guardada' : `${previews.length} fotos guardadas` })
     navigate(-1)
   }
 
@@ -78,11 +105,11 @@ export function PhotoFormScreen({ toast }: { toast: (args: { type: 'success' | '
 
   return (
     <div className="app-page readable-screen bg-bg flex flex-col">
-      <Header title="Nueva foto" showBack />
+      <Header title="Agregar fotos" showBack />
 
       <div className="form-center app-content w-full">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Card className="animate-slide-up stagger-1 opacity-0">
+          <Card>
             <div className="flex items-center gap-3">
               <Avatar firstName={client.firstName} lastName={client.lastName} id={client.id} />
               <div>
@@ -94,7 +121,7 @@ export function PhotoFormScreen({ toast }: { toast: (args: { type: 'success' | '
             </div>
           </Card>
 
-          <Card className="animate-slide-up stagger-2 opacity-0">
+          <Card>
             <label className="fluid-xs font-medium text-text-secondary mb-2.5 block" id="photo-type-label">Tipo de foto</label>
             <div className="grid grid-cols-2 gap-3" role="group" aria-labelledby="photo-type-label">
               {(['before', 'after'] as const).map((type) => (
@@ -114,37 +141,47 @@ export function PhotoFormScreen({ toast }: { toast: (args: { type: 'success' | '
             </div>
           </Card>
 
-          <Card className="animate-slide-up stagger-3 opacity-0">
+          <Card>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              capture="environment"
+              multiple
+              disabled={reading || submitted}
               onChange={handleFileChange}
               className="hidden"
-              aria-label="Seleccionar foto"
+              aria-label="Seleccionar fotos"
             />
-            <button
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              disabled={reading || submitted}
+              onChange={handleFileChange}
+              className="hidden"
+              aria-label="Tomar foto"
+            />
+            <div className="flex flex-wrap gap-3">
+              <button
               type="button"
+              disabled={reading || submitted}
               onClick={() => fileInputRef.current?.click()}
-              className="w-full aspect-video rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-3 hover:border-primary/30 transition-colors press-scale overflow-hidden"
-              aria-label={preview ? 'Cambiar foto seleccionada' : 'Tomar foto o elegir de galería'}
-            >
-              {preview ? (
-                <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-              ) : (
-                <>
-                  <div className="flex gap-3">
-                    <Camera size={30} className="text-text-secondary" />
-                    <ImageIcon size={24} className="text-text-secondary" />
-                  </div>
-                  <span className="fluid-xs text-text-secondary">Tomar foto o elegir de galería</span>
-                </>
-              )}
-            </button>
+              className="flex flex-1 items-center justify-center gap-2 min-h-12 px-3 text-sm"
+              ><ImageIcon size={20} aria-hidden="true" />{previews.length ? 'Agregar más' : 'Elegir fotos'}</button>
+              <button type="button" disabled={reading || submitted} onClick={() => cameraInputRef.current?.click()} className="flex flex-1 items-center justify-center gap-2 min-h-12 px-3 text-sm"><Camera size={20} aria-hidden="true" />Tomar foto</button>
+            </div>
+            <p role="status" className="text-sm text-text-secondary mt-3">{reading ? 'Leyendo fotos…' : `${previews.length} ${previews.length === 1 ? 'foto seleccionada' : 'fotos seleccionadas'}. Máximo 5 MB por foto.`}</p>
+            {previews.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+              {previews.map((preview, index) => <div key={preview} className="relative">
+                <img src={preview} alt={`Foto seleccionada ${index + 1}`} className="w-full aspect-square rounded-xl object-cover" />
+                <button type="button" disabled={reading || submitted} onClick={() => setPreviews(current => current.filter(url => url !== preview))} aria-label={`Quitar foto ${index + 1}`} className="absolute top-1 right-1 w-11 h-11 flex items-center justify-center bg-card rounded-lg"><X size={20} aria-hidden="true" /></button>
+              </div>)}
+            </div>}
+            <p className="text-sm text-text-secondary mt-3">El tipo, tratamiento y notas se aplican a todas las fotos seleccionadas.</p>
           </Card>
 
-          <Card className="animate-slide-up stagger-4 opacity-0">
+          <Card>
             <div className="space-y-4">
               <div>
                 <label htmlFor="photo-procedure" className="fluid-xs font-medium text-text-secondary mb-1.5 block">Tratamiento</label>
@@ -173,11 +210,11 @@ export function PhotoFormScreen({ toast }: { toast: (args: { type: 'success' | '
 
           <button
             type="submit"
-            disabled={submitted || !preview}
-            className="w-full bg-primary text-white rounded-xl fluid-sm font-semibold press-scale transition-all disabled:opacity-50 animate-slide-up stagger-5 opacity-0"
+            disabled={submitted || reading || !previews.length}
+            className="w-full bg-primary text-white rounded-xl fluid-sm font-semibold press-scale transition-all disabled:opacity-50"
             style={{ height: 'var(--btn-h)' }}
           >
-            {submitted ? 'Guardando...' : 'Guardar foto'}
+            {submitted ? 'Guardando...' : previews.length > 1 ? `Guardar ${previews.length} fotos` : 'Guardar foto'}
           </button>
         </form>
       </div>

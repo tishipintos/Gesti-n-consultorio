@@ -35,11 +35,11 @@
 
 :root {
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --surface-shadow: 0 2px 9px rgb(64 48 20 / 0.055);
+  --surface-shadow: none;
   --surface-edge: #ede5d5;
   --surface-shadow-raised: 0 14px 30px rgba(64, 48, 20, 0.13);
   --page-gutter: clamp(1rem, 0.75rem + 1.25vw, 1.5rem);
-  --content-width: 32rem;
+  --content-width: 42rem;
   --gutter-left: max(var(--page-gutter), env(safe-area-inset-left, 0px));
   --gutter-right: max(var(--page-gutter), env(safe-area-inset-right, 0px));
   --section-gap: clamp(1.25rem, 1rem + 1vw, 1.75rem);
@@ -65,10 +65,7 @@ html body { height: auto; overflow: visible; }
 .app-shell { min-width: 0; }
 
 body {
-  background:
-    radial-gradient(circle at 8% -10%, rgba(212, 166, 42, 0.13), transparent 31rem),
-    radial-gradient(circle at 100% 14%, rgba(233, 186, 101, 0.10), transparent 25rem),
-    var(--color-bg);
+  background: var(--color-bg);
   color: var(--color-text-primary);
   min-height: 100dvh;
   line-height: 1.5;
@@ -211,14 +208,13 @@ input, textarea, select, button {
 }
 
 .card-interactive {
-  transition: transform 0.2s var(--ease-out), box-shadow 0.2s ease;
+  transition: background-color 140ms ease;
 }
 .card-interactive:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--surface-shadow-raised);
+  background-color: #fffcf5;
 }
 .card-interactive:active {
-  transform: scale(0.985);
+  background-color: #F4EFDF;
 }
 
 /* ── Glass — Apple material ── */
@@ -232,9 +228,7 @@ input, textarea, select, button {
 
 .app-chrome {
   padding-top: env(safe-area-inset-top, 0px);
-  background: linear-gradient(to bottom, rgba(250, 246, 235, 0.92), rgba(250, 246, 235, 0.72));
-  backdrop-filter: blur(22px) saturate(155%);
-  -webkit-backdrop-filter: blur(22px) saturate(155%);
+  background: var(--color-bg);
 }
 
 .app-navigation {
@@ -264,8 +258,7 @@ input, textarea, select, button {
 }
 
 .tabbar-button[aria-current="page"] {
-  background: linear-gradient(#f8eed7, #ecdfbd);
-  box-shadow: inset 0 1px 0 #fff9e9, inset 0 0 0 1px #dfd0aa;
+  background: #f1e4c4;
 }
 
 .tabbar-button:active { background: #e8dbb8; }
@@ -290,14 +283,16 @@ input, textarea, select, button {
 
 .surface {
   background: var(--color-card);
-  box-shadow: 0 0 0 1px var(--surface-edge), var(--surface-shadow);
+  border: 1px solid var(--surface-edge);
+  box-shadow: none;
+  border-radius: 12px;
 }
 
 .surface.notification-card {
   background: #fff;
   padding: 0.75rem;
   border-radius: 0.875rem;
-  box-shadow: 0 0 0 1px var(--surface-edge);
+  box-shadow: none;
   min-height: 44px;
 }
 
@@ -406,9 +401,10 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, [role="tab
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: clamp(0.5rem, 0.4rem + 0.4vw, 1rem);
-  border-radius: clamp(0.75rem, 0.6rem + 0.5vw, 1rem);
-  transition: transform 180ms var(--ease-out), background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+  min-height: 44px;
+  padding: 0.4rem 0;
+  border-radius: 8px;
+  transition: background-color 120ms ease, color 120ms ease;
 }
 
 /* Fluid card padding */
@@ -491,15 +487,6 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, [role="tab
 }
 
 @media (min-width: 640px) {
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(110deg, rgba(212, 166, 42, 0.06), transparent 42%, rgba(233, 186, 101, 0.05));
-    opacity: 1;
-  }
-
   .app-page {
     padding-bottom: calc(var(--tabbar-h) + var(--safe-area-bottom) + 2.5rem);
   }
@@ -572,7 +559,9 @@ input, textarea, select {
 .client-detail { --fluid-xs: 0.875rem; --fluid-sm: 1rem; --fluid-lg: 1.375rem; }
 .client-detail h2 { overflow-wrap: anywhere; }
 .client-detail header button { min-width: 2.75rem; min-height: 2.75rem; }
-.client-quick-action { min-height: 8rem; padding: 1rem 0.5rem; }
+.client-quick-action { min-height: 48px; padding: 0.625rem 1rem; flex-direction: row; justify-content: center; border-radius: 10px; }
+.client-quick-action > div { padding: 0; }
+.client-quick-action svg { width: 20px; height: 20px; }
 .client-quick-action span { font-size: 1rem; font-weight: 700; }
 .client-quick-action:hover { background: color-mix(in srgb, var(--color-primary) 6%, white); }
 @media (prefers-reduced-motion: reduce) {
@@ -608,7 +597,7 @@ button:not(:where(.flat-controls button, button[aria-label="Cerrar"])):not(:disa
   filter: brightness(0.94);
 }
 button.bg-primary, button.bg-error { border-color: transparent; }
-.app-fab { box-shadow: 0 5px 14px rgb(85 63 18 / 0.18) !important; border-radius: 1rem; }
+.app-fab { min-height: 48px; padding: 0.75rem 1.25rem; box-shadow: 0 3px 10px rgb(85 63 18 / 0.12); border-radius: 10px; }
 .photo-type-button { background-color: var(--color-card); color: var(--color-text-secondary); }
 .photo-type-button[aria-pressed="true"] { background-color: var(--color-primary); border-color: var(--color-primary); color: white; }
 .photo-type-button:focus-visible { outline: 3px solid var(--color-primary-dark); outline-offset: 3px; }
@@ -668,6 +657,27 @@ button.bg-primary, button.bg-error { border-color: transparent; }
 .patient-photo-viewer::backdrop { background: rgb(28 23 15 / 0.65); }
 .patient-photo-full { display: block; width: 100%; max-height: 70dvh; object-fit: contain; background: var(--color-bg); }
 
+@media (prefers-reduced-motion: no-preference) {
+  .patient-photo-viewer[open] {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+  }
+  .patient-photo-viewer[open]::backdrop {
+    opacity: 1;
+    transition: opacity 200ms var(--ease-out);
+  }
+  .quick-optional::details-content {
+    opacity: 0;
+    transition: opacity 160ms var(--ease-out);
+  }
+  .quick-optional[open]::details-content { opacity: 1; }
+  @starting-style {
+    .patient-photo-viewer[open] { opacity: 0; transform: scale(0.98); }
+    .patient-photo-viewer[open]::backdrop { opacity: 0; }
+  }
+}
+
 
 .tabbar-items button { min-width: 0; }
 .tabbar-items button > span { text-align: center; overflow-wrap: anywhere; }
@@ -683,7 +693,7 @@ button.bg-primary, button.bg-error { border-color: transparent; }
 @media (min-width: 900px) {
   .wide-page { --content-width: 70rem; }
   .agenda-layout { display: grid; align-items: start; gap: 1.5rem; }
-  .agenda-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .agenda-layout { grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.2fr); gap: 2.5rem; }
 }
 
 .app-page { min-width: 0; overflow-wrap: anywhere; }
@@ -695,11 +705,18 @@ button.bg-primary, button.bg-error { border-color: transparent; }
   }
 }
 
-.app-header-title { font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem); }
+.app-header-title { font-size: clamp(1.75rem, 1.5rem + 0.7vw, 2rem); font-weight: 600; letter-spacing: -0.035em; }
+.has-back .app-header-title { font-size: 1.125rem; letter-spacing: -0.02em; }
+.header-back:empty { display: none; }
+.has-back .header-back { margin-right: 0.5rem; }
 .app-header-subtitle { font-size: 0.8125rem; margin-top: 0.125rem; }
-.app-header-content { padding-block: 0.375rem; }
-.profile-summary { background: #fffcf5; }
-.profile-record { box-shadow: 0 0 0 1px var(--surface-edge); }
+.app-header-content { padding-block: 1.25rem 1rem; gap: 1rem; }
+.has-back .app-header-content { padding-block: 0.625rem; }
+.profile-summary { padding-block: 0.5rem 1.75rem; border-bottom: 1px solid var(--surface-edge); }
+.profile-settings { gap: 0; }
+.profile-settings .profile-record { padding: 1.25rem 0; border-bottom: 1px solid var(--surface-edge); border-radius: 0; background: transparent; font-weight: 500; }
+.profile-record { border: 1px solid var(--surface-edge); box-shadow: none; }
+.profile-settings .profile-record { border-width: 0 0 1px; }
 .profile-record:hover { background: #fffcf5; }
 .quick-appointment-body > label + label { margin-top: 0.875rem; }
 .calendar-cell { font-variant-numeric: tabular-nums; }
@@ -733,4 +750,31 @@ button.bg-primary, button.bg-error { border-color: transparent; }
   flex-shrink: 0;
   align-self: end;
   margin-top: 0.25rem;
+}
+
+/* Clinical workspace: hierarchy comes from type, spacing and rules. */
+.agenda-month { background: transparent; border: 0; border-bottom: 1px solid var(--surface-edge); border-radius: 0; box-shadow: none; }
+.agenda-month-toolbar { display: flex; align-items: center; gap: 0.25rem; padding-bottom: 0.75rem; }
+.agenda-month-title { flex: 1; font-size: 1.125rem; font-weight: 600; letter-spacing: -0.02em; text-transform: capitalize; }
+.agenda-month-toolbar button { min-width: 44px; min-height: 44px; display: grid; place-items: center; border-radius: 8px; color: var(--color-primary); }
+.agenda-month-toolbar .calendar-today { padding-inline: 0.75rem; font-size: 0.8125rem; font-weight: 600; }
+.agenda-month .calendar-grid { padding-inline: 0; gap: 2px; }
+.agenda-month .calendar-grid:last-child { padding-bottom: 1rem; }
+.agenda-appointment { padding-block: 0.5rem; border-bottom: 1px solid var(--surface-edge); }
+.agenda-appointment-body { min-width: 0; }
+.patient-row { display: block; width: 100%; min-height: 76px; padding: 1rem 0; text-align: left; border-bottom: 1px solid var(--surface-edge); }
+.patient-row:last-child { border-bottom: 0; }
+.patient-row:active { background: #F4EFDF; }
+.client-letter-heading { padding-block: 0.5rem; border-bottom: 1px solid var(--surface-edge); font-size: 0.75rem; }
+.patient-avatar { background: #F0E5C7; color: var(--color-primary); }
+.client-search.surface { background: #F4EFDF; border: 1px solid transparent; border-radius: 10px; }
+.client-search input { border: 0; }
+.patient-identity { padding-block: 0.25rem 1.5rem; border-bottom: 1px solid var(--surface-edge); }
+.patient-history { padding-block: 0.25rem 1.5rem; border-bottom: 1px solid var(--surface-edge); }
+.empty-state { padding: 2.5rem 1rem; }
+.empty-state-icon svg { width: 32px; height: 32px; stroke-width: 1.5; }
+.empty-state button { background: transparent; color: var(--color-primary); border: 1px solid #DDD2B8; font-size: 0.875rem; }
+.welcome-features > div + div { border-top: 1px solid var(--surface-edge); }
+@media (hover: hover) and (pointer: fine) {
+  .patient-row:hover { background: #F4EFDF; }
 }

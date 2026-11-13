@@ -14,9 +14,9 @@ export function Header({ title, subtitle, showBack = false, backTo, rightAction 
   const navigate = useNavigate()
 
   return (
-    <header className="app-chrome flat-controls sticky top-0 z-30" style={{ boxShadow: '0 1px 0 rgba(82, 111, 152, 0.10)' }}>
+    <header className={`app-chrome flat-controls sticky top-0 z-30 ${showBack || backTo ? 'has-back' : 'page-header'}`}>
       <div className="app-header-content flex items-center justify-between mx-auto" style={{ minHeight: 'var(--header-h)' }}>
-        <div className="flex items-center min-w-[48px]">
+        <div className="header-back flex items-center">
           {(showBack || backTo) && (
             <button
               onClick={() => {
@@ -31,8 +31,8 @@ export function Header({ title, subtitle, showBack = false, backTo, rightAction 
             </button>
           )}
         </div>
-        <div className="text-center flex-1 min-w-0 px-2">
-          <h1 className="app-header-title font-extrabold text-text-primary line-clamp-2 [overflow-wrap:anywhere] leading-tight py-0.5 tracking-[-0.02em]">{title}</h1>
+        <div className="header-title flex-1 min-w-0">
+          <h1 className="app-header-title text-text-primary line-clamp-2 [overflow-wrap:anywhere] leading-tight">{title}</h1>
           {subtitle && (
             <p className="app-header-subtitle text-text-secondary">{subtitle}</p>
           )}

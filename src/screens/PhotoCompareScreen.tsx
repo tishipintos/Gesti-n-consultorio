@@ -107,7 +107,7 @@ export function PhotoCompareScreen() {
       />
 
       <main className="app-content app-stack">
-        <div className="flex gap-2 animate-slide-up stagger-1 opacity-0" role="group" aria-label="Modo de visualización">
+        <div className="flex gap-2" role="group" aria-label="Modo de visualización">
           {modes.map((mode) => (
             <button
               key={mode.key}
@@ -133,7 +133,7 @@ export function PhotoCompareScreen() {
         </p>
 
         {photos.length === 0 ? (
-          <div className="animate-slide-up stagger-2 opacity-0">
+          <div>
             <EmptyState
               icon={<Camera size={48} />}
               title="Sin fotos"
@@ -141,7 +141,7 @@ export function PhotoCompareScreen() {
             />
           </div>
         ) : viewMode === 'single' ? (
-          <div className="animate-slide-up stagger-2 opacity-0">
+          <div>
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3">
               <img
                 src={photos[selectedPhoto]?.fileUrl}
@@ -182,7 +182,7 @@ export function PhotoCompareScreen() {
             </div>
           </div>
         ) : viewMode === 'sideBySide' ? (
-          <div className="animate-slide-up stagger-2 opacity-0">
+          <div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <div className="text-center mb-2">
@@ -227,7 +227,7 @@ export function PhotoCompareScreen() {
             </div>
           </div>
         ) : (
-          <div className="animate-slide-up stagger-2 opacity-0">
+          <div>
             {beforePhotos.length > 0 && afterPhotos.length > 0 ? (
               <div
                 ref={sliderRef}
@@ -290,7 +290,7 @@ export function PhotoCompareScreen() {
         )}
 
         {photos.length > 0 && (
-          <div className="animate-slide-up stagger-3 opacity-0">
+          <div>
             <h3 className="fluid-sm font-semibold text-text-secondary mb-2">Todas las fotos</h3>
             <div className="space-y-2">
               {photos.map((photo) => (

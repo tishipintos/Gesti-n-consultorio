@@ -20,7 +20,7 @@ export const parseProfile = (value: string) => profileOptions.find(option => opt
 export const profileName = (profile?: Profile) => profileOptions.find(option => option.value === profile)?.label ?? 'Sin registrar'
 
 export function appointmentAttribution(appointment: Appointment) {
-  return 'Agendada por: ' + profileName(appointment.scheduledBy) + ' · Atendida por: ' + (appointment.attendedBy ? profileName(appointment.attendedBy) : appointment.scheduledBy ? 'Sin asignar' : 'Sin registrar')
+  return 'Atiende: ' + (appointment.attendedBy ? profileName(appointment.attendedBy) : 'Sin asignar')
 }
 
 export function getProfileSections(profile: Profile, appointments: Appointment[], clients: Client[], now: Date) {

@@ -31,7 +31,7 @@ Expo Go puede eliminar la información local del teléfono.
 
 La interfaz nativa reproduce la referencia móvil de la web: Manrope incluida en
 el bundle (sin descargar fuentes al abrir), íconos Lucide, fondo crema y acentos
-mostaza, encabezados centrados y navegación inferior flotante. El calendario
+mostaza, encabezados alineados a la izquierda y navegación inferior flotante. El calendario
 mensual permite cambiar de mes, volver a hoy y ver los indicadores de turnos.
 Se conservan el directorio alfabético con avatares, la ficha con acciones
 Fotos/Cita, la galería antes/después, los formularios en tarjetas y las

@@ -1,5 +1,4 @@
 import { AttendingField } from '../components/AttendingField'
-import { profileName } from '../utils/profiles'
 import type { Profile } from '../types'
 import { PROCEDURES, isAvailableProcedure } from '../utils/procedures'
 import { useState, useMemo } from 'react'
@@ -113,7 +112,7 @@ export function AppointmentFormScreen({ toast }: { toast: (args: { type: 'succes
 
       <div className="form-center app-content w-full">
         <form onSubmit={handleSubmit} className="appointment-form space-y-4">
-          <Card className="animate-slide-up stagger-1 opacity-0">
+          <Card>
             <div className="flex items-center gap-3">
               <Avatar firstName={client.firstName} lastName={client.lastName} id={client.id} />
               <div>
@@ -125,7 +124,7 @@ export function AppointmentFormScreen({ toast }: { toast: (args: { type: 'succes
             </div>
           </Card>
 
-          <Card className="animate-slide-up stagger-2 opacity-0">
+          <Card>
             <div className="space-y-4">
               <div>
                 <label className="fluid-xs font-medium text-text-secondary mb-1.5 block">Fecha</label>
@@ -163,7 +162,7 @@ export function AppointmentFormScreen({ toast }: { toast: (args: { type: 'succes
             </div>
           </Card>
 
-          <Card className="animate-slide-up stagger-3 opacity-0">
+          <Card>
             <div className="space-y-4">
               <div>
                 <label htmlFor="apt-procedure" className="fluid-xs font-medium text-text-secondary mb-2 block">Motivo de consulta</label>
@@ -182,8 +181,6 @@ export function AppointmentFormScreen({ toast }: { toast: (args: { type: 'succes
                 </select>
                 {errors.procedure && <p id="apt-procedure-error" className="text-xs text-error mt-1.5" role="alert">{errors.procedure}</p>}
               </div>
-              {existing && <p className="text-text-secondary">Agendada por: {profileName(existing.scheduledBy)}</p>}
-              {existing && !existing.scheduledBy && !existing.attendedBy && <p className="text-text-secondary">Atendida por: Sin registrar</p>}
               <AttendingField value={attendedBy} onChange={setAttendedBy} className={inputClass} />
               <div>
                 <label htmlFor="apt-notes" className="fluid-xs font-medium text-text-secondary mb-1.5 block">Notas</label>
@@ -202,7 +199,7 @@ export function AppointmentFormScreen({ toast }: { toast: (args: { type: 'succes
           <button
             type="submit"
             disabled={submitted || !form.date || !selectedTime}
-            className="w-full bg-primary text-white rounded-xl fluid-sm font-semibold press-scale transition-all disabled:opacity-50 animate-slide-up stagger-4 opacity-0"
+            className="w-full bg-primary text-white rounded-xl fluid-sm font-semibold press-scale transition-all disabled:opacity-50"
             style={{ height: 'var(--btn-h)' }}
           >
             {submitted ? 'Guardando...' : existing ? 'Guardar cambios' : 'Agendar turno'}

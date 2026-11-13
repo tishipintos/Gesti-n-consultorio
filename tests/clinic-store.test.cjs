@@ -20,6 +20,30 @@ const storePath = require.resolve('../src/store/index.ts')
 function reload() { delete require.cache[storePath]; return require(storePath) }
 beforeEach(() => { saved = new Map(); failWrite = false })
 
+test('a photo batch preserves metadata, order and distinct identities after reload', () => {
+  const store = reload().useStore
+  const client = store.getState().addClient({ firstName: 'Ana', lastName: 'Prueba' })
+  const inputs = ['one.jpg', 'two.jpg'].map(name => ({ clientId: client.id, fileUrl: 'clinic-photos/' + name, type: 'after', procedure: 'Botox', notes: 'Control', takenAt: '2026-11-11T12:00:00Z' }))
+  const photos = store.getState().addPhotos(inputs)
+  assert.equal(new Set(photos.map(p => p.id)).size, 2)
+  assert.deepEqual(photos.map(({ id: _id, createdAt: _createdAt, ...photo }) => photo), inputs)
+  assert.deepEqual(reload().useStore.getState().photos, photos)
+})
+
+test('a failed photo batch saves none and can be retried without duplicates', () => {
+  const store = reload().useStore
+  const client = store.getState().addClient({ firstName: 'Ana', lastName: 'Prueba' })
+  const inputs = ['one.jpg', 'two.jpg'].map(fileUrl => ({ clientId: client.id, fileUrl, type: 'before', takenAt: '2026-11-11T12:00:00Z' }))
+  const before = saved.get('clinic_data')
+  failWrite = true
+  assert.throws(() => store.getState().addPhotos(inputs), /Storage full/)
+  assert.equal(store.getState().photos.length, 0)
+  assert.equal(saved.get('clinic_data'), before)
+  failWrite = false
+  store.getState().addPhotos(inputs)
+  assert.equal(reload().useStore.getState().photos.length, 2)
+})
+
 test('patients, appointments, payment changes and photo references survive reload', () => {
   const store = reload().useStore
   const client = store.getState().addClient({ firstName: 'Ana', lastName: 'Prueba' })
@@ -95,6 +119,14 @@ test('profiles share the calendar and persist separate scheduling and attending 
   assert.equal(restored.appointments[0].scheduledBy, undefined)
   assert.equal(restored.appointments[1].scheduledBy, 'coti')
   assert.equal(restored.appointments[1].attendedBy, 'pitu')
+})
+
+test('appointment attribution shows only the attending professional', () => {
+  const { appointmentAttribution } = require('../src/utils/profiles.ts')
+  assert.equal(appointmentAttribution({ scheduledBy: 'coti', attendedBy: 'pitu' }), 'Atiende: Pitu')
+  assert.equal(appointmentAttribution({ scheduledBy: 'pitu', attendedBy: 'coti' }), 'Atiende: Coti')
+  assert.equal(appointmentAttribution({ scheduledBy: 'coti' }), 'Atiende: Sin asignar')
+  assert.equal(appointmentAttribution({}), 'Atiende: Sin asignar')
 })
 
 test('profile lists include only the attending profile, in chronological order', () => {
